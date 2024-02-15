@@ -1,8 +1,6 @@
 import React, { createContext, useState, useContext } from "react";
 import axios from "axios";
-import { createStore, applyMiddleware } from 'redux';
-import { Provider } from 'react-redux';
-import thunk from 'redux-thunk';
+
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
