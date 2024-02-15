@@ -176,13 +176,16 @@ app.post('/addentry', async (req, res) => {
 });
 
 app.get('/getuser', async (req, res) => {
+    console.log("yoman yoman 123")
     token = req.headers.session_token;
+    console.log(req)
     if (!token) {
+        console.log("User is not logged in");
         return res.status(400).json({ message: 'User is not logged in' });
     }
 
     const existingUser = await collection.findOne({ session_token: token });
-    console.log(existingUser);
+    console.log("Found user: ",existingUser);
     return res.json(existingUser);
 });
 

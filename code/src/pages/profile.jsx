@@ -6,10 +6,35 @@ import { useNavigate } from 'react-router-dom';
 
 function Profile() {
 
-    const navigate = useNavigate();
-
     const { user } = useContext(UserContext);
     const { logOutUser } = useContext(UserContext);
+    const [userData, setUserData] = useState(null);
+
+    console.log("User: ", user)
+
+    async function getUserData() {
+        try {
+            console.log("Getting user data: ", user);
+            const response = await axios.get('http://localhost:3001/getuser', {
+                headers: {
+                    session_token: user,
+                }
+            });
+            console.log("User Data: ", response);
+            if (response.status === 200) {
+                setUserData(response.data);
+            }
+        } catch (error) {
+            console.log("Error getting user data: ", error);
+            alert("Error getting user data. Please try again!");
+        }
+    }
+
+    useEffect(() => {
+        getUserData();
+    }, []);
+
+    const navigate = useNavigate();
 
     const logOut = async () => {
         try {
@@ -41,13 +66,13 @@ function Profile() {
                 </div>
             </div>
             <div className='profile-container'>
-
-            </div>
-            <br></br>
-            <br></br>
-            <br></br>
-            <div class="dashboard-content">
-                
+                <div className="user-profile">
+                    <h2>User Profile</h2>
+                    <p>Name: {userData.name}</p>
+                    <p>Email: {userData.email}</p>
+                    <p>Age: {userData.age}</p>
+                    <p>Occupation: {userData.occupation}</p>
+                </div>
             </div>
         </div>
     )
