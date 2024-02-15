@@ -50,6 +50,11 @@ function Dashboard(){
                 }
             });
             console.log("Response: ", response);
+            if (response.status === 200) {
+                alert("Journal saved successfully!");
+            }
+            setTitle('');
+            setBody('');
         } catch (error) {
             console.log("Error saving journal: ", error);
         }

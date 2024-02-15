@@ -137,149 +137,53 @@ app.post('/logout', async (req, res) => {
     }
 });
 
-app.post('/addtask', async (req, res) => {
-    token = req.body.headers.token;
+app.post('/addentry', async (req, res) => {
+    console.log(req.body)
+    token = req.body.headers.session_token;
     if (!token) {
         return res.status(400).json({ message: 'User is not logged in' });
     }
 
     const existingUser = await collection.findOne({ session_token: token });
-    console.log(existingUser);
+    console.log("welcome you: ",existingUser);
     
     if (existingUser) {
-        task = req.body.params;
-        if (!task.task) {
-            return res.status(400).json({ message: 'Task is required' });
+        entry = req.body.params;
+        if (!entry.title) {
+            return res.status(400).json({ message: 'Title is required' });
         }
 
-        if (existingUser.tasks) {
-            tasks = existingUser.tasks;
-            console.log("Existing Tasks: ", tasks);
-            if (tasks[task.task]) {
-                return res.status(400).json({ message: 'Task already exists' });
+        if (existingUser.entries) {
+            entries = existingUser.entries;
+            console.log("Existing Entries: ", entries);
+            if (entries[entry.title]) {
+                return res.status(400).json({ message: 'Entry already exists' });
             }
         }
         else {
-            tasks = {};
+            entries = {};
         }
-        tasks[task.task] = [task.status, task.deadline];
-        console.log("Updated Tasks: ", tasks);
-        if (!task.deadline) {
-            task.deadline = "-";
-        }
-        collection.updateOne({ session_token: token }, { $set: { tasks: tasks } }).then(result => {
+        entries[entry.title] = entry.body;
+        console.log("Updated Entries: ", entries);
+        collection.updateOne({ session_token: token }, { $set: { entries: entries } }).then(result => {
             console.log(result);
         }).catch(err => {
-            console.error('Error adding task', err);
+            console.error('Error adding entry', err);
         });
-        console.log('Task added successfully');
-        return res.json({ message: 'Task added successfully' });
+        console.log('Entry added successfully');
+        return res.json({ message: 'Entry added successfully' });
     }
 });
 
-app.get('/tokenexpiry', async (req, res) => {
-    token = req.headers.token;
+app.get('/getuser', async (req, res) => {
+    token = req.headers.session_token;
     if (!token) {
         return res.status(400).json({ message: 'User is not logged in' });
     }
 
     const existingUser = await collection.findOne({ session_token: token });
     console.log(existingUser);
-    if (existingUser) {
-        return res.json({ message: 'Token is valid' , expiration_time: existingUser.expiration_time});
-    }
-    else {
-        return res.status(400).json({ message: 'Token has expired' });
-    }
-});
-
-app.get('/gettasks', async (req, res) => {
-    token = req.headers.token;
-    if (!token) {
-        return res.status(400).json({ message: 'User is not logged in' });
-    }
-
-    const existingUser = await collection.findOne({ session_token: token });
-    console.log(existingUser);
-    tasks = existingUser.tasks;
-    console.log("Tasks: ", tasks);
-    return res.json(tasks);
-});
-
-app.delete('/deletetask', async (req, res) => {
-    token = req.headers.token;
-    dtask = req.query.task;
-    if (!token) {
-        return res.status(400).json({ message: 'User is not logged in' });
-    }
-
-    const existingUser = await collection.findOne({ session_token: token });
-    if (existingUser) {
-        tasks = existingUser.tasks;
-        if (!tasks[dtask]) {
-            return res.status(400).json({ message: 'Task does not exist' });
-        }
-        temptasks = {}
-        for (task in tasks){
-            console.log(task);
-            if (task !== dtask){
-                temptasks[task] = tasks[task];
-            }
-        }
-        collection.updateOne({ session_token: token }, { $set: { tasks: temptasks } }).then(result => {
-            console.log(result);
-        }).catch(err => {
-            console.error('Error deleting task', err);
-        });
-        console.log('Task deleted successfully');
-        return res.json({ message: 'Task deleted successfully' });
-    }
-});
-
-app.put('/updatetask', async (req, res) => {
-    token = req.body.headers.token;
-    currtask = req.body.params.task;
-    ustatus = req.body.params.status;
-    deadline = req.body.params.deadline;
-    utask = req.body.params.utask || currtask;
-    console.log(req.body.params);
-    if (!token) {
-        return res.status(400).json({ message: 'User is not logged in' });
-    }
-
-    const existingUser = await collection.findOne({ session_token: token });
-    if (existingUser) {
-        tasks = existingUser.tasks;
-        if (!tasks[currtask]) {
-            return res.status(400).json({ message: 'Task does not exist' });
-        }
-        else if (utask === currtask) {
-            tasks[currtask] = [ustatus, deadline];
-            collection.updateOne({ session_token: token }, { $set: { tasks: tasks } }).then(result => {
-                console.log(result);
-            }).catch(err => {
-                console.error('Error updating task', err);
-            });
-        }
-        else{
-            temptasks = {}
-            for (task in tasks){
-                if (task === currtask){
-                    temptasks[utask] = [ustatus, deadline];
-                }
-                else{
-                    temptasks[task] = tasks[task];
-                }
-            }
-            collection.updateOne({ session_token: token }, { $set: { tasks: temptasks } }).then(result => {
-                console.log(result);
-            }).catch(err => {
-                console.error('Error updating task', err);
-            });
-        }
-        console.log('Task updated successfully');
-        return res.json({ message: 'Task updated successfully' });
-    }
+    return res.json(existingUser);
 });
 
 
