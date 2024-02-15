@@ -90,7 +90,7 @@ function Dashboard(){
                                     <i class="fa fa-caret-down"></i>
                                 </button>
                                 <div class="dropdown-content">
-                                <a href="/myprofile"  class="nav-link">My Profile</a>
+                                <a href="/myprofile"   onClick={redirectNow('/myprofile')} class="nav-link">My Profile</a>
                                 <a href="#logout"  class="nav-link" onClick={logOut}>Logout</a>
                             </div>
                         </div>

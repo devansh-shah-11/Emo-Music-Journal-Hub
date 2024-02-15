@@ -5,6 +5,8 @@ import Signup from "../pages/signup.jsx"
 import PrivateRoute from "./routes.jsx";
 import Dashboard from "../pages/dashboard.jsx";
 import TasksCalendar from "../pages/entries.jsx";
+import Profile from "../pages/profile.jsx";
+
 
 function Nav() {
     return (
@@ -17,6 +19,7 @@ function Nav() {
                 <Route exact path="/" element={<Dashboard />} />
             </Route>
             <Route exact path="/view_entry" element={ <TasksCalendar /> } />
+            <Route exact path='/myprofile' element={ <Profile /> } />
         </Routes>
         </UserProvider>
     </BrowserRouter>
