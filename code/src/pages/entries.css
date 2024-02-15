@@ -1,0 +1,79 @@
+/* .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}   */
+
+body {
+    background-color: black;
+}
+
+.container{
+    border: 2 px solid cyan;
+    padding: 10px;
+    margin: auto;
+    box-shadow: 0px 0px 10px 0px cyan;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.search-bar {
+    color: white;
+    background-color: cyan;
+    margin: 20px;
+    margin-bottom: 30px !important;
+}
+
+.react-calendar {
+    color: cyan;
+    background-color: black;
+}
+
+.react-calendar__tile:hover {
+    color: cyan;
+    background-color: chocolate;
+}
+
+.react-calendar__month-view__days__day {
+    color: cyan;
+}
+
+.react-calendar__year-view__months__month {
+    color: cyan;
+}
+
+.react-calendar__decade-view__years__year {
+    color: cyan;
+}
+
+.react-calendar__tile--now {
+    color: cyan;
+}
+
+.react-calendar__tile--active {
+    color: cyan;
+}
+
+.react-calendar__navigation__label__labelText {
+    color: cyan;
+}
+
+.react-calendar__navigation__arrow {
+    color: cyan;
+}
+
+
+
+.task-item {
+    color: darkgreen;
+    font-size: 1.5em; 
+    margin-bottom: 10px; 
+    transition: transform 0.3s ease;
+}
+
+.task-item:hover {
+    transform: scale(1.1);
+    background-color: yellow; 
+}

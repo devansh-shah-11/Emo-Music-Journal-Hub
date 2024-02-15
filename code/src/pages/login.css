@@ -1,0 +1,15 @@
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: cyan;
+    font-weight: 100;
+    color: black;
+    font-size: large;
+}
+
+.center-text {
+    text-align: center;
+    color: black;
+}

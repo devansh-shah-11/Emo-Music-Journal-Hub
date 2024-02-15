@@ -1,0 +1,4 @@
+1) give a seperator between my profile and logout
+2) on hovering - change the color
+3) figure out the border for image
+4) 
