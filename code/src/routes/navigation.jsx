@@ -24,6 +24,6 @@ function Nav() {
         </UserProvider>
     </BrowserRouter>
     );
-    }
+}
 
 export default Nav;

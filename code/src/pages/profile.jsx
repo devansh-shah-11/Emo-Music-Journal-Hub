@@ -1,20 +1,23 @@
-import { useEffect, useState, useRef, useContext } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import axios from "axios";
-import { UserContext } from "../context/usercontext.jsx";
 import './profile.css';
+import { UserContext } from "../context/usercontext.jsx";
 import { useNavigate } from 'react-router-dom';
 
 function Profile() {
+    console.log(localStorage)
+    // const { logOutUser } = useContext(UserContext);
+    const [userData, setUserData] = useState(localStorage.getItem('user'));
 
-    const { user } = useContext(UserContext);
-    const { logOutUser } = useContext(UserContext);
-    const [userData, setUserData] = useState(null);
+    useEffect(() => {
+        setUserData(JSON.parse(localStorage.getItem('user')));
+    }, []);
 
-    console.log("User: ", user)
+    console.log("User: ", userData);
 
     async function getUserData() {
         try {
-            console.log("Getting user data: ", user);
+            console.log("Getting user data: ", userData);
             const response = await axios.get('http://localhost:3001/getuser', {
                 headers: {
                     session_token: user,
@@ -36,17 +39,17 @@ function Profile() {
 
     const navigate = useNavigate();
 
-    const logOut = async () => {
-        try {
-            console.log("Logging out user: ", user);
-            const loggedOut = await logOutUser(user);
-            if (loggedOut) {
-                window.location.reload(true);
-            }
-        } catch (error) {
-            alert(error)
-        }
-    }
+    // const logOut = async () => {
+    //     try {
+    //         console.log("Logging out user: ", user);
+    //         const loggedOut = await logOutUser(user);
+    //         if (loggedOut) {
+    //             window.location.reload(true);
+    //         }
+    //     } catch (error) {
+    //         alert(error)
+    //     }
+    // }
 
     return (
         <div class="dashboard">
@@ -60,7 +63,7 @@ function Profile() {
                         </button>
                         <div class="dropdown-content">
                             <a href="/" class="nav-link" onClick={navigate('/')}>Dashboard</a>
-                            <a href="#logout"  class="nav-link" onClick={logOut}>Logout</a>
+                            {/* <a href="#logout"  class="nav-link" onClick={logOut}>Logout</a> */}
                         </div>
                     </div>
                 </div>

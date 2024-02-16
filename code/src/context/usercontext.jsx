@@ -5,7 +5,8 @@ export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-
+    
+    
     const emailPasswordLogin = async (email, password) => {
         try{
             const url = 'http://localhost:3001/login';

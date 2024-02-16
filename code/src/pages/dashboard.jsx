@@ -6,6 +6,10 @@ import { UserContext } from "../context/usercontext.jsx";
 function Dashboard(){
 
     const { user } = useContext(UserContext);
+
+    localStorage.setItem('user', JSON.stringify(user));
+    console.log("yoman", localStorage.getItem('user'));
+    console.log(localStorage)
     const { logOutUser } = useContext(UserContext);
 
     const [title, setTitle] = useState('');

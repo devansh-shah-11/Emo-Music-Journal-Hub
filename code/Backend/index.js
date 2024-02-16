@@ -176,7 +176,7 @@ app.post('/addentry', async (req, res) => {
 });
 
 app.get('/getuser', async (req, res) => {
-    console.log("yoman yoman 123")
+    console.log("\n\n\n\n\nyoman yoman 123")
     token = req.headers.session_token;
     console.log(req)
     if (!token) {
