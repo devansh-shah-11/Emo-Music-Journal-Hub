@@ -5,19 +5,22 @@ import { UserContext } from "../context/usercontext.jsx";
 import { useNavigate } from 'react-router-dom';
 
 function Profile() {
+
     console.log(localStorage)
     // const { logOutUser } = useContext(UserContext);
-    const [userData, setUserData] = useState(localStorage.getItem('user'));
+    // const [user, setUser] = useState(localStorage.getItem('user'));
 
-    useEffect(() => {
-        setUserData(JSON.parse(localStorage.getItem('user')));
-    }, []);
+    // useEffect(() => {
+    //     setUser(JSON.parse(localStorage.getItem('user')));
+    // }, []);
 
-    console.log("User: ", userData);
+    const user = JSON.parse(localStorage.getItem('user'));
+    
+    console.log("User: ", user);
 
-    async function getUserData() {
+    async function getUser() {
         try {
-            console.log("Getting user data: ", userData);
+            console.log("Getting user data: ", user);
             const response = await axios.get('http://localhost:3001/getuser', {
                 headers: {
                     session_token: user,
@@ -25,7 +28,7 @@ function Profile() {
             });
             console.log("User Data: ", response);
             if (response.status === 200) {
-                setUserData(response.data);
+                console.log("User Data: ", response.data);
             }
         } catch (error) {
             console.log("Error getting user data: ", error);
@@ -34,7 +37,7 @@ function Profile() {
     }
 
     useEffect(() => {
-        getUserData();
+        getUser();
     }, []);
 
     const navigate = useNavigate();
@@ -71,10 +74,12 @@ function Profile() {
             <div className='profile-container'>
                 <div className="user-profile">
                     <h2>User Profile</h2>
-                    <p>Name: {userData.name}</p>
-                    <p>Email: {userData.email}</p>
-                    <p>Age: {userData.age}</p>
-                    <p>Occupation: {userData.occupation}</p>
+                    {/* <p>Name: {user.data.name}</p>
+                    <p>Email: {user.data.email}</p>
+                    <p>Age: {user.data.age}</p>
+                    <p>Occupation: {user.data.occupation}</p>
+                    <p>Mobile Number: {user.data.mobilenumber}</p>
+                    <p>Journal Entries: {user.data.entries}</p> */}
                 </div>
             </div>
         </div>
