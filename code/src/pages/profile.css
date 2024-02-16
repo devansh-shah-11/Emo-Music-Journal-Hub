@@ -81,71 +81,40 @@
     text-align: left;
 }
 
-.dashboard-content {
+.profile-container {
+    display: flex;
+    flex-direction: column;
+    padding: 30px 30px;
+    background-color: #06e5d2;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgb(190, 190, 191);
+    width: 20%;
+    margin-top: 200px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: auto;
+}
+
+.profile-item {
     display: flex;
     justify-content: space-between;
-}
-
-.text-box {
-    display: flex;
-    width: 50%;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-}
-
-.title-input {
-    width: 100%;
-    padding: 10px;
     margin-bottom: 10px;
-    height: 30px;
-    border: 5px solid cyan;
-    border-radius: 8px;
+    padding: 5px;
 }
 
-.body-input {
-    width: 100%;
-    padding: 10px;
-    height: 400px;
-    margin-bottom: 10px;
-    border: 5px solid cyan;
-    border-radius: 8px;
+.profile-label {
+    flex-basis: 50%;
+    text-align: left;
+    font-weight: bold;
+    font-size: x-large;
+    color: #333;
+    margin-left: 20px;
 }
 
-.save-button {
-    padding: 10px 20px;
-    margin-top: 10px;
-    border: 5px solid cyan;
-    border-radius: 8px;
-}
-
-
-.video-box {
-    width: 640px;
-    border: 5px solid cyan;
-    height: 500px;
-    margin-right: 100px;
-    border-top-left-radius: 12px;
-    border-bottom-right-radius: 12px;
-}
-
-.recommendation-box {
-    width: 15%;
-    border: 1px solid beige;
-    margin-left: 1500px;
-    padding: 10px;
-    margin-top: 20px;
-    color: antiquewhite;
-    border-radius: 8px;
-    border: 5px solid cyan;
-}
-
-.song-button {
-    padding: 10px;
-    margin-left: 1580px;
-    background-color: darkgreen;
-    color: cyan;
-    border: 5px solid cyan;
-    cursor: pointer;
-    border-radius: 8px;
+.profile-value {
+    flex-basis: 50%;
+    text-align: left;
+    color: black;
+    font-size: x-large;
 }

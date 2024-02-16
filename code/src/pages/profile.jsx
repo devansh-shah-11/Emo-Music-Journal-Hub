@@ -6,16 +6,10 @@ import { useNavigate } from 'react-router-dom';
 
 function Profile() {
 
-    console.log(localStorage)
-    // const { logOutUser } = useContext(UserContext);
-    // const [user, setUser] = useState(localStorage.getItem('user'));
-
-    // useEffect(() => {
-    //     setUser(JSON.parse(localStorage.getItem('user')));
-    // }, []);
-
     const user = JSON.parse(localStorage.getItem('user'));
-    
+    const { logOutUser } = useContext(UserContext);
+    const [userData, setUserData] = useState(null);
+
     console.log("User: ", user);
 
     async function getUser() {
@@ -28,7 +22,8 @@ function Profile() {
             });
             console.log("User Data: ", response);
             if (response.status === 200) {
-                console.log("User Data: ", response.data);
+                setUserData(response.data);
+                console.log("User Data: ", userData);
             }
         } catch (error) {
             console.log("Error getting user data: ", error);
@@ -38,21 +33,27 @@ function Profile() {
 
     useEffect(() => {
         getUser();
-    }, []);
+    }, userData);
 
     const navigate = useNavigate();
 
-    // const logOut = async () => {
-    //     try {
-    //         console.log("Logging out user: ", user);
-    //         const loggedOut = await logOutUser(user);
-    //         if (loggedOut) {
-    //             window.location.reload(true);
-    //         }
-    //     } catch (error) {
-    //         alert(error)
-    //     }
-    // }
+    const logOut = async () => {
+        try {
+            console.log("Logging out user: ", user);
+            const loggedOut = await logOutUser(user);
+            if (loggedOut) {
+                // window.location.reload(true);
+                localStorage.removeItem('user');
+                navigate('/login');
+            }
+        } catch (error) {
+            alert(error)
+        }
+    }
+    
+    if(!userData) {
+        navigate('/Login');
+    }
 
     return (
         <div class="dashboard">
@@ -65,22 +66,41 @@ function Profile() {
                             <i class="fa fa-caret-down"></i>
                         </button>
                         <div class="dropdown-content">
-                            <a href="/" class="nav-link" onClick={navigate('/')}>Dashboard</a>
-                            {/* <a href="#logout"  class="nav-link" onClick={logOut}>Logout</a> */}
+                            <a href="/" class="nav-link" onClick={() => navigate('/')}>Dashboard</a>
+                            <a href="#logout"  class="nav-link" onClick={logOut}>Logout</a>
                         </div>
                     </div>
                 </div>
             </div>
+            
             <div className='profile-container'>
-                <div className="user-profile">
-                    <h2>User Profile</h2>
-                    {/* <p>Name: {user.data.name}</p>
-                    <p>Email: {user.data.email}</p>
-                    <p>Age: {user.data.age}</p>
-                    <p>Occupation: {user.data.occupation}</p>
-                    <p>Mobile Number: {user.data.mobilenumber}</p>
-                    <p>Journal Entries: {user.data.entries}</p> */}
-                </div>
+                {userData && (
+                    <div>
+                        <h1 style={{textAlign: "center"}}>Profile</h1>
+                        <div class="profile-details">
+                            <div class="profile-item">
+                                <div class="profile-label">Name</div>
+                                <div class="profile-value">{userData.name}</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="profile-label">Email</div>
+                                <div class="profile-value">{userData.email}</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="profile-label">Mobile Number</div>
+                                <div class="profile-value">{userData.mobilenumber}</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="profile-label">Age</div>
+                                <div class="profile-value">{userData.age}</div>
+                            </div>
+                            <div class="profile-item">
+                                <div class="profile-label">Occupation</div>
+                                <div class="profile-value">{userData.occupation}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

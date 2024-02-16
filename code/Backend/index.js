@@ -178,7 +178,7 @@ app.post('/addentry', async (req, res) => {
 app.get('/getuser', async (req, res) => {
     console.log("\n\n\n\n\nyoman yoman 123")
     token = req.headers.session_token;
-    console.log(req)
+    console.log("Token: ",token)
     if (!token) {
         console.log("User is not logged in");
         return res.status(400).json({ message: 'User is not logged in' });
@@ -187,6 +187,18 @@ app.get('/getuser', async (req, res) => {
     const existingUser = await collection.findOne({ session_token: token });
     console.log("Found user: ",existingUser);
     return res.json(existingUser);
+});
+
+app.get('/getentry', async (req, res) => {
+    token = req.headers.session_token;
+    if (!token) {
+        return res.status(400).json({ message: 'User is not logged in' });
+    }
+
+    const existingUser = await collection.findOne({ session_token: token });
+    if (existingUser) {
+        return res.json(existingUser.entries);
+    }
 });
 
 
