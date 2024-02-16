@@ -52,7 +52,7 @@ function Profile() {
     }
     
     if(!userData) {
-        navigate('/Login');
+        navigate('/login');
     }
 
     return (

@@ -5,11 +5,19 @@ import { UserContext } from "../context/usercontext.jsx";
 
 function Dashboard(){
 
-    const { user } = useContext(UserContext);
+    let { user } = useContext(UserContext);
 
-    localStorage.setItem('user', JSON.stringify(user));
-    console.log("yoman", localStorage.getItem('user'));
-    console.log(localStorage)
+    if(user){
+        localStorage.setItem('user', JSON.stringify(user));
+        console.log("yoman", localStorage.getItem('user'));
+        console.log(localStorage)
+    }
+
+    if (localStorage.getItem('user') && user === null) {
+        console.log("User not found in context. Setting user from local storage");
+        user = JSON.parse(localStorage.getItem('user'));
+    }
+
     const { logOutUser } = useContext(UserContext);
 
     const [title, setTitle] = useState('');
@@ -20,6 +28,7 @@ function Dashboard(){
             console.log("Logging out user: ", user);
             const loggedOut = await logOutUser(user);
             if (loggedOut) {
+                localStorage.removeItem('user');
                 window.location.reload(true);
             }
         } catch (error) {

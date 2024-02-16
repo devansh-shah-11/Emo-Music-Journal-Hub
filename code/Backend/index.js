@@ -163,7 +163,9 @@ app.post('/addentry', async (req, res) => {
         else {
             entries = {};
         }
-        entries[entry.title] = entry.body;
+        const currentDate = new Date();
+        console.log(currentDate); // Logs the current date
+        entries[entry.title] = [entry.body, currentDate];
         console.log("Updated Entries: ", entries);
         collection.updateOne({ session_token: token }, { $set: { entries: entries } }).then(result => {
             console.log(result);
@@ -191,6 +193,7 @@ app.get('/getuser', async (req, res) => {
 
 app.get('/getentry', async (req, res) => {
     token = req.headers.session_token;
+    console.log("Token: ",token)
     if (!token) {
         return res.status(400).json({ message: 'User is not logged in' });
     }
