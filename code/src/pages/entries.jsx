@@ -32,6 +32,21 @@ function TasksCalendar() {
         }
     }
 
+    const notLoggedIn = () => {
+        console.log("Inside notLoggedIn function")
+        if (!user || user === "null") {
+            console.log("User not logged in. Redirecting to login page...");
+            navigate('/login');
+        }
+        else {
+            console.log("User logged in: ", user);
+        }
+    }
+
+    useEffect(() => {
+        notLoggedIn();
+    }, []);
+
     useEffect(() => {
         getEntries();
         console.log("User Data in useEffect part: ", userData);
@@ -79,42 +94,47 @@ function TasksCalendar() {
     };
 
     return (
-        <div class="dashboard">
-            <div class="navbar">
-                <div class="navbar-content">
-                    <div class="app-name">Smart Journal</div>
-                    <div class="spacer"></div>
-                    <div class="dropdown" style={{height: "90px"}}>
-                        <button class="dropbtn">Profile
-                            <i class="fa fa-caret-down"></i>
-                        </button>
-                        <div class="dropdown-content">
-                            <a href="/" class="nav-link" onClick={() => navigate('/')}>Dashboard</a>
-                            <a href="#logout"  class="nav-link" onClick={logOut}>Logout</a>
+        user ? (
+            <div className="dashboard">
+                <div className="navbar">
+                    <div className="navbar-content">
+                        <div className="app-name">Smart Journal</div>
+                        <div className="spacer"></div>
+                        <div className="dropdown" style={{height: "90px"}}>
+                            <button className="dropbtn">Profile
+                            </button>
+                            <div className="dropdown-content">
+                                <a href="/dashboard" className="nav-link" onClick={() => navigate('/dashboard')}>Dashboard</a>
+                                <a href="#logout"  className="nav-link" onClick={logOut}>Logout</a>
+                            </div>
                         </div>
                     </div>
                 </div>
+            
+                <div className='container'>
+                    <TextField 
+                        id="outlined-basic" 
+                        label="Search" 
+                        variant="outlined" 
+                        className="search-bar"
+                    />
+                    <Calendar
+                        tileContent={({ date, view }) => view === 'month' && <div onMouseEnter={() => handleMouseEnter(date)} style={{ height: '100%', width: '100%' }}></div>}
+                    />
+                    <ul>
+                        {journalentry.map((entry, index) => {
+                            return (
+                                <li key={index} className='task-item'>{entry[0]}</li>
+                            );
+                        })}
+                    </ul>
+                </div>
             </div>
-        
-            <div className='container'>
-                <TextField 
-                    id="outlined-basic" 
-                    label="Search" 
-                    variant="outlined" 
-                    className="search-bar"
-                />
-                <Calendar
-                    tileContent={({ date, view }) => view === 'month' && <div onMouseEnter={() => handleMouseEnter(date)} style={{ height: '100%', width: '100%' }}></div>}
-                />
-                <ul>
-                    {journalentry.map((entry, index) => {
-                        return (
-                            <li key={index} className='task-item'>{entry[0]}</li>
-                        );
-                    })}
-                </ul>
+        ) : (
+            <div>
+                <h1 style={{color: "red"}}>You are not logged in. Please log in to continue</h1>
             </div>
-        </div>
+        )
     );
 }
 

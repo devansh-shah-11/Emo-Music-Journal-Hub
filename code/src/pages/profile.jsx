@@ -36,11 +36,27 @@ function Profile() {
         }
     }
 
+    const navigate = useNavigate();
+
+
+    const notLoggedIn = () => {
+        console.log("Inside notLoggedIn function")
+        if (!user || user === "null") {
+            console.log("User not logged in. Redirecting to login page...");
+            navigate('/login');
+        }
+        else {
+            console.log("User logged in: ", user);
+        }
+    }
+
+    useEffect(() => {
+        notLoggedIn();
+    }, []);
+
     useEffect(() => {
         getUser();
     }, [user]);
-
-    const navigate = useNavigate();
 
     const logOut = async () => {
         try {
@@ -70,7 +86,7 @@ function Profile() {
                         <button className="dropbtn">Profile
                         </button>
                         <div className="dropdown-content">
-                            <a href="/" className="nav-link" onClick={() => navigate('/dashboard')}>Dashboard</a>
+                            <a href="/dashboard" className="nav-link" onClick={() => navigate('/dashboard')}>Dashboard</a>
                             <a href="#logout"  className="nav-link" onClick={logOut}>Logout</a>
                         </div>
                     </div>
@@ -78,7 +94,7 @@ function Profile() {
             </div>
             
             <div className='profile-container'>
-                {userData && (
+                {userData ? (
                     <div>
                         <h1 style={{textAlign: "center"}}>Profile</h1>
                         <div className="profile-details">
@@ -104,7 +120,12 @@ function Profile() {
                             </div>
                         </div>
                     </div>
-                )}
+                ) : (
+                    <div>
+                        <h1 style={{color: "red"}}>Not logged in</h1>
+                    </div>
+                )
+            }
             </div>
         </div>
     )
