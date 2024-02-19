@@ -15,9 +15,10 @@ function Nav() {
                 <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
-                    <Route path="/" element={<PrivateRoute />}>
-                        <Route path="dashboard" element={<Dashboard />} />
-                    </Route>
+                    {/* <Route path="/" element={<PrivateRoute />}>
+                        
+                    </Route> */}
+                    <Route path="dashboard" element={<Dashboard />} />
                     <Route path="view_entry" element={<TasksCalendar />} />
                     <Route path="myprofile" element={<Profile />} />
                 </Routes>

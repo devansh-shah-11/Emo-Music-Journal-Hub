@@ -9,12 +9,32 @@ import { useNavigate } from "react-router-dom";
 function Dashboard(){
 
     const { logOutUser } = useContext(UserContext);
-    const user = useSelector(selectUser);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
+
+    let user = useSelector(selectUser);
+    console.log("User from redux: ", user);
+    if(user === "null" || !user) {
+        user = localStorage.getItem("user");
+    }
+
+    const notLoggedIn = () => {
+        console.log("Inside notLoggedIn function")
+        if (!user || user === "null") {
+            console.log("User not logged in. Redirecting to login page...");
+            navigate('/login');
+        }
+        else {
+            console.log("User logged in: ", user);
+        }
+    }
+
+    useEffect(() => {
+        notLoggedIn();
+    }, []);
 
     const logOut = async () => {
         try {
@@ -23,8 +43,9 @@ function Dashboard(){
             console.log("Logged out: ", loggedOut);
             if (loggedOut) {
                 dispatch(logout());
+                localStorage.removeItem("user");
                 console.log("Logged out successfully!");
-                window.location.reload(true);
+                navigate('/login');
             }
         } catch (error) {
             alert(error)
@@ -32,6 +53,8 @@ function Dashboard(){
     }
 
     const redirectProfile = () => {
+        localStorage.setItem("user", user);
+        console.log(localStorage)
         navigate('/myprofile')
     }
 
@@ -91,64 +114,70 @@ function Dashboard(){
     }, []);
 
     return (
-        <div className="dashboard">
-            <div className="navbar">
-                <div className="navbar-content">
-                    <div className="app-name">Smart Journal</div>
-                    <div className="spacer"></div>
-                        <div className="nav-items">
-                            <a href="/view_entry" onClick={redirectNow('/view_entry')} style={{textDecoration: "none"}}>View Past Entries</a>
-                        </div>
-                            <div className="dropdown" style={{height: "90px"}}>
-                                <button className="dropbtn">Profile
-                                </button>
-                                <div className="dropdown-content">
-                                <a href="/myprofile"   onClick={redirectProfile()} className="nav-link">My Profile</a>
-                                <a href="#logout"  className="nav-link" onClick={logOut}>Logout</a>
+        user ? (
+            <div className="dashboard">
+                <div className="navbar">
+                    <div className="navbar-content">
+                        <div className="app-name">Smart Journal</div>
+                        <div className="spacer"></div>
+                            <div className="nav-items">
+                                <a href="/view_entry" onClick={redirectNow('/view_entry')} style={{textDecoration: "none"}}>View Past Entries</a>
                             </div>
-                        </div>
+                                <div className="dropdown" style={{height: "90px"}}>
+                                    <button className="dropbtn">Profile
+                                    </button>
+                                    <div className="dropdown-content">
+                                    <a href="/myprofile" onClick={redirectProfile} className="nav-link">My Profile</a>
+                                    <a href="#logout" className="nav-link" onClick={logOut}>Logout</a>
+                                </div>
+                            </div>
+                    </div>
                 </div>
-            </div>
-            <br></br>
-            <br></br>
-            <br></br>
-            <div className="dashboard-content">
-                <div className="left-space"></div>
-                <div className="text-box">
-                    <input 
-                        type="text" 
-                        placeholder="Title" 
-                        className="title-input" 
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                    />
-                    <textarea 
-                        placeholder="Body" 
-                        className="body-input" 
-                        value={body} 
-                        onChange={e => setBody(e.target.value)} 
-                    />
-                    <button className="save-button" onClick={SaveJournal}>Save Journal</button>
+                <br></br>
+                <br></br>
+                <br></br>
+                <div className="dashboard-content">
+                    <div className="left-space"></div>
+                    <div className="text-box">
+                        <input 
+                            type="text" 
+                            placeholder="Title" 
+                            className="title-input" 
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                        />
+                        <textarea 
+                            placeholder="Body" 
+                            className="body-input" 
+                            value={body} 
+                            onChange={e => setBody(e.target.value)} 
+                        />
+                        <button className="save-button" onClick={SaveJournal}>Save Journal</button>
+                    </div>
+                    <div className="video-box">
+                        <video ref={videoRef} id="live-video" autoPlay playsInline></video>
+                    </div>
                 </div>
-                <div className="video-box">
-                    <video ref={videoRef} id="live-video" autoPlay playsInline></video>
-                </div>
-            </div>
-            <button onClick={() => setShowSongs(!showSongs)} className="song-button">Generate Songs</button>
+                <button onClick={() => setShowSongs(!showSongs)} className="song-button">Generate Songs</button>
 
-            {showSongs && (
-                <div className="recommendation-box">
-                    <h2>Title: Songs Recommended</h2>
-                    <ol>
-                    <li>Song 1</li>
-                    <li>Song 2</li>
-                    <li>Song 3</li>
-                    <li>Song 4</li>
-                    <li>Song 5</li>
-                    </ol>
-                </div>
-            )}
-        </div>
+                {showSongs && (
+                    <div className="recommendation-box">
+                        <h2>Title: Songs Recommended</h2>
+                        <ol>
+                        <li>Song 1</li>
+                        <li>Song 2</li>
+                        <li>Song 3</li>
+                        <li>Song 4</li>
+                        <li>Song 5</li>
+                        </ol>
+                    </div>
+                )}
+            </div>
+        ) : (
+            <div>
+                <h1 style={{color: "red"}}>Not logged in</h1>
+            </div>
+        )
     )
 }
 

@@ -4,11 +4,15 @@ import './profile.css';
 import { UserContext } from "../context/usercontext.jsx";
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from "react-redux";
-import { selectUser } from "../features/userSlice";
+import { logout, selectUser } from "../features/userSlice";
 
 function Profile() {
 
-    const user = useSelector(selectUser);
+    let user = useSelector(selectUser);
+    if(!user) {
+        user = localStorage.getItem("user");
+        console.log("User from local storage: ", user);
+    }
     console.log("Yoman User: ", user)
     const { logOutUser } = useContext(UserContext);
     const [userData, setUserData] = useState(null);
@@ -43,6 +47,7 @@ function Profile() {
             console.log("Logging out user: ", user);
             const loggedOut = await logOutUser(user);
             if (loggedOut) {
+                localStorage.removeItem("user");
                 dispatch(logout());
                 navigate('/login');
             }
@@ -66,7 +71,7 @@ function Profile() {
                         </button>
                         <div className="dropdown-content">
                             <a href="/" className="nav-link" onClick={() => navigate('/dashboard')}>Dashboard</a>
-                            <a href="#logout"  className="nav-link" onClick={() => logOut}>Logout</a>
+                            <a href="#logout"  className="nav-link" onClick={logOut}>Logout</a>
                         </div>
                     </div>
                 </div>

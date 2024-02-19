@@ -28,7 +28,7 @@ const Login = () => {
     const redirectNow = () => {
         const redirectTo = location.search.replace("?redirectTo=", "");
         console.log("Redirecting to: ", redirectTo)
-        if (redirectTo === '/'){
+        if (redirectTo === '/' || redirectTo === ""){
             navigate("/dashboard");
         } else {
             navigate(redirectTo);

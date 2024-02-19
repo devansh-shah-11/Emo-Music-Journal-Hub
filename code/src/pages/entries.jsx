@@ -9,8 +9,8 @@ import { UserContext } from "../context/usercontext.jsx";
 import { useNavigate } from 'react-router-dom';
 
 function TasksCalendar() {
-
-    const user = JSON.parse(localStorage.getItem('user'));
+    console.log(localStorage.user)
+    const user = localStorage.getItem('user');
     const { logOutUser } = useContext(UserContext);
     const [userData, setUserData] = useState(null);
 
