@@ -2,23 +2,14 @@ import { useEffect, useState, useRef, useContext } from 'react';
 import './dashboard.css';
 import axios from "axios";
 import { UserContext } from "../context/usercontext.jsx";
+import { useDispatch, useSelector } from "react-redux";
+import { logout, selectUser } from "../features/userSlice";
 
 function Dashboard(){
 
-    let { user } = useContext(UserContext);
-
-    if(user){
-        localStorage.setItem('user', JSON.stringify(user));
-        console.log("yoman", localStorage.getItem('user'));
-        console.log(localStorage)
-    }
-
-    if (localStorage.getItem('user') && user === null) {
-        console.log("User not found in context. Setting user from local storage");
-        user = JSON.parse(localStorage.getItem('user'));
-    }
-
     const { logOutUser } = useContext(UserContext);
+    const user = useSelector(selectUser);
+    const dispatch = useDispatch();
 
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
@@ -27,8 +18,10 @@ function Dashboard(){
         try {
             console.log("Logging out user: ", user);
             const loggedOut = await logOutUser(user);
+            console.log("Logged out: ", loggedOut);
             if (loggedOut) {
-                localStorage.removeItem('user');
+                dispatch(logout());
+                console.log("Logged out successfully!");
                 window.location.reload(true);
             }
         } catch (error) {
@@ -38,6 +31,8 @@ function Dashboard(){
 
     const redirectNow = (path) => (e) => {
         e.preventDefault();
+        console.log("Redirecting to: ", path)
+        console.log("Current User: ", user)
         window.location.href = path;
     }
 
@@ -78,33 +73,32 @@ function Dashboard(){
     const videoRef = useRef(null);
 
     useEffect(() => {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-            }
-            })
-            .catch(err => console.log(err));
+        if (navigator.mediaDevices?.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = stream;
+                    }
+                })
+                .catch(err => console.log(err));
         }
     }, []);
 
     return (
-        <div class="dashboard">
-            <div class="navbar">
-                <div class="navbar-content">
-                    <div class="app-name">Smart Journal</div>
-                    <div class="spacer"></div>
-                        <div class="nav-items">
+        <div className="dashboard">
+            <div className="navbar">
+                <div className="navbar-content">
+                    <div className="app-name">Smart Journal</div>
+                    <div className="spacer"></div>
+                        <div className="nav-items">
                             <a href="/view_entry" onClick={redirectNow('/view_entry')} style={{textDecoration: "none"}}>View Past Entries</a>
                         </div>
-                            <div class="dropdown" style={{height: "90px"}}>
-                                <button class="dropbtn">Profile
-                                    <i class="fa fa-caret-down"></i>
+                            <div className="dropdown" style={{height: "90px"}}>
+                                <button className="dropbtn">Profile
                                 </button>
-                                <div class="dropdown-content">
-                                <a href="/myprofile"   onClick={redirectNow('/myprofile')} class="nav-link">My Profile</a>
-                                <a href="#logout"  class="nav-link" onClick={logOut}>Logout</a>
+                                <div className="dropdown-content">
+                                <a href="/myprofile"   onClick={redirectNow('/myprofile')} className="nav-link">My Profile</a>
+                                <a href="#logout"  className="nav-link" onClick={logOut}>Logout</a>
                             </div>
                         </div>
                 </div>

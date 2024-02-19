@@ -10,19 +10,19 @@ import Profile from "../pages/profile.jsx";
 
 function Nav() {
     return (
-    <BrowserRouter>
-        <UserProvider>
-        <Routes>
-            <Route exact path="/login" element={<Login />} />
-            <Route exact path="/signup" element={<Signup />} />
-            <Route element={<PrivateRoute />}>
-                <Route exact path="/" element={<Dashboard />} />
-            </Route>
-            <Route exact path="/view_entry" element={ <TasksCalendar /> } />
-            <Route exact path='/myprofile' element={ <Profile /> } />
-        </Routes>
-        </UserProvider>
-    </BrowserRouter>
+        <BrowserRouter>
+            <UserProvider>
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/signup" element={<Signup />} />
+                    <Route path="/" element={<PrivateRoute />}>
+                        <Route path="dashboard" element={<Dashboard />} />
+                        <Route path="view_entry" element={<TasksCalendar />} />
+                        <Route path="myprofile" element={<Profile />} />
+                    </Route>
+                </Routes>
+            </UserProvider>
+        </BrowserRouter>
     );
 }
 

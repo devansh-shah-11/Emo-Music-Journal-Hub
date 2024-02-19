@@ -1,15 +1,20 @@
 import { Button, TextField } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { login, selectUser } from "../features/userSlice";
 import { UserContext } from "../context/usercontext.jsx";
 import "./login.css";
 
 const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const dispatch = useDispatch();
     
-    const { user, fetchUser, emailPasswordLogin , facebooklogin} = useContext(UserContext);
+    const { emailPasswordLogin } = useContext(UserContext);
     
+    const user = useSelector(selectUser);
+    console.log("Initial User: ", user)
     const [form, setForm] = useState({
         email: "",
         password: ""
@@ -22,7 +27,12 @@ const Login = () => {
     
     const redirectNow = () => {
         const redirectTo = location.search.replace("?redirectTo=", "");
-        navigate(redirectTo ? redirectTo : "/");
+        console.log("Redirecting to: ", redirectTo)
+        if (redirectTo === '/'){
+            navigate("/dashboard");
+        } else {
+            navigate(redirectTo);
+        }
     }
     
     const onSubmit = async (event) => {
@@ -30,7 +40,14 @@ const Login = () => {
         try {
             const user = await emailPasswordLogin(form.email, form.password);
             if (user) {
+                console.log("Dispatching user: ", user)
+                dispatch(
+                    login({
+                        session_token: user
+                    }
+                ))
                 redirectNow();
+                console.log("Now redirecting...")
             }
         } catch (error) {
             if (error.statusCode === 401) {
@@ -41,11 +58,18 @@ const Login = () => {
         }
     };
 
+
     const loadUser = async () => {
     if (!user) {
         const fetchedUser = await emailPasswordLogin(form.email, form.password);
         if (fetchedUser) {
-        redirectNow();
+            console.log("Dispatching user: ", fetchedUser)
+            dispatch(
+                login({
+                    session_token: fetchedUser
+                }
+            ));
+            redirectNow();
         }
     }
     }

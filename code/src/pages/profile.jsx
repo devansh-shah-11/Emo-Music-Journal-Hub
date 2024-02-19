@@ -3,15 +3,16 @@ import axios from "axios";
 import './profile.css';
 import { UserContext } from "../context/usercontext.jsx";
 import { useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from "react-redux";
+import { selectUser } from "../features/userSlice";
 
 function Profile() {
 
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = useSelector(selectUser);
+    console.log("Yoman User: ", user)
     const { logOutUser } = useContext(UserContext);
     const [userData, setUserData] = useState(null);
-
-    console.log("User: ", user);
-
+    const dispatch = useDispatch();
     async function getUser() {
         try {
             console.log("Getting user data: ", user);
@@ -33,7 +34,7 @@ function Profile() {
 
     useEffect(() => {
         getUser();
-    }, userData);
+    }, [user]);
 
     const navigate = useNavigate();
 
@@ -42,8 +43,7 @@ function Profile() {
             console.log("Logging out user: ", user);
             const loggedOut = await logOutUser(user);
             if (loggedOut) {
-                // window.location.reload(true);
-                localStorage.removeItem('user');
+                dispatch(logout());
                 navigate('/login');
             }
         } catch (error) {
@@ -56,18 +56,17 @@ function Profile() {
     }
 
     return (
-        <div class="dashboard">
-            <div class="navbar">
-                <div class="navbar-content">
-                    <div class="app-name">Smart Journal</div>
-                    <div class="spacer"></div>
-                    <div class="dropdown" style={{height: "90px"}}>
-                        <button class="dropbtn">Profile
-                            <i class="fa fa-caret-down"></i>
+        <div className="dashboard">
+            <div className="navbar">
+                <div className="navbar-content">
+                    <div className="app-name">Smart Journal</div>
+                    <div className="spacer"></div>
+                    <div className="dropdown" style={{height: "90px"}}>
+                        <button className="dropbtn">Profile
                         </button>
-                        <div class="dropdown-content">
-                            <a href="/" class="nav-link" onClick={() => navigate('/')}>Dashboard</a>
-                            <a href="#logout"  class="nav-link" onClick={logOut}>Logout</a>
+                        <div className="dropdown-content">
+                            <a href="/" className="nav-link" onClick={() => navigate('/dashboard')}>Dashboard</a>
+                            <a href="#logout"  className="nav-link" onClick={() => logOut}>Logout</a>
                         </div>
                     </div>
                 </div>
@@ -77,26 +76,26 @@ function Profile() {
                 {userData && (
                     <div>
                         <h1 style={{textAlign: "center"}}>Profile</h1>
-                        <div class="profile-details">
-                            <div class="profile-item">
-                                <div class="profile-label">Name</div>
-                                <div class="profile-value">{userData.name}</div>
+                        <div className="profile-details">
+                            <div className="profile-item">
+                                <div className="profile-label">Name</div>
+                                <div className="profile-value">{userData.name}</div>
                             </div>
-                            <div class="profile-item">
-                                <div class="profile-label">Email</div>
-                                <div class="profile-value">{userData.email}</div>
+                            <div className="profile-item">
+                                <div className="profile-label">Email</div>
+                                <div className="profile-value">{userData.email}</div>
                             </div>
-                            <div class="profile-item">
-                                <div class="profile-label">Mobile Number</div>
-                                <div class="profile-value">{userData.mobilenumber}</div>
+                            <div className="profile-item">
+                                <div className="profile-label">Mobile Number</div>
+                                <div className="profile-value">{userData.mobilenumber}</div>
                             </div>
-                            <div class="profile-item">
-                                <div class="profile-label">Age</div>
-                                <div class="profile-value">{userData.age}</div>
+                            <div className="profile-item">
+                                <div className="profile-label">Age</div>
+                                <div className="profile-value">{userData.age}</div>
                             </div>
-                            <div class="profile-item">
-                                <div class="profile-label">Occupation</div>
-                                <div class="profile-value">{userData.occupation}</div>
+                            <div className="profile-item">
+                                <div className="profile-label">Occupation</div>
+                                <div className="profile-value">{userData.occupation}</div>
                             </div>
                         </div>
                     </div>

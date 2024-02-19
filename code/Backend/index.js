@@ -118,7 +118,13 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/logout', async (req, res) => {
-    token = req.body.headers.session_token;
+    let t = req.body.headers.session_token;
+    if (t.session_token){
+        let token = t.session_token;
+    }
+    else{
+        let token = t;
+    }
     if (!token) {
         return res.status(400).json({ message: 'User is not logged in' });
     }
