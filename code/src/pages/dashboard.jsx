@@ -4,12 +4,14 @@ import axios from "axios";
 import { UserContext } from "../context/usercontext.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, selectUser } from "../features/userSlice";
+import { useNavigate } from "react-router-dom";
 
 function Dashboard(){
 
     const { logOutUser } = useContext(UserContext);
     const user = useSelector(selectUser);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
@@ -27,6 +29,10 @@ function Dashboard(){
         } catch (error) {
             alert(error)
         }
+    }
+
+    const redirectProfile = () => {
+        navigate('/myprofile')
     }
 
     const redirectNow = (path) => (e) => {
@@ -97,7 +103,7 @@ function Dashboard(){
                                 <button className="dropbtn">Profile
                                 </button>
                                 <div className="dropdown-content">
-                                <a href="/myprofile"   onClick={redirectNow('/myprofile')} className="nav-link">My Profile</a>
+                                <a href="/myprofile"   onClick={redirectProfile()} className="nav-link">My Profile</a>
                                 <a href="#logout"  className="nav-link" onClick={logOut}>Logout</a>
                             </div>
                         </div>
@@ -106,13 +112,13 @@ function Dashboard(){
             <br></br>
             <br></br>
             <br></br>
-            <div class="dashboard-content">
+            <div className="dashboard-content">
                 <div className="left-space"></div>
                 <div className="text-box">
                     <input 
                         type="text" 
                         placeholder="Title" 
-                        class="title-input" 
+                        className="title-input" 
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                     />
