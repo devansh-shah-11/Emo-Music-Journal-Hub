@@ -81,76 +81,40 @@
     text-align: left;
 }
 
-body {
-    background-color: black;
-}
-
-.container{
-    border: 2 px solid cyan;
-    padding: 10px;
-    margin: auto;
-    box-shadow: 0px 0px 10px 0px cyan;
-    border-radius: 10px;
+.profile-container {
     display: flex;
     flex-direction: column;
+    padding: 30px 30px;
+    background-color: #06e5d2;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgb(190, 190, 191);
+    width: 20%;
+    margin-top: 200px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: auto;
+}
+
+.profile-item {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
+    margin-bottom: 10px;
+    padding: 5px;
 }
 
-.search-bar {
-    color: white;
-    background-color: cyan;
-    margin: 20px;
-    margin-bottom: 30px !important;
+.profile-label {
+    flex-basis: 50%;
+    text-align: left;
+    font-weight: bold;
+    font-size: x-large;
+    color: #333;
+    margin-left: 20px;
 }
 
-.react-calendar {
-    color: cyan;
-    background-color: black;
-}
-
-.react-calendar__tile:hover {
-    color: cyan;
-    background-color: chocolate;
-}
-
-.react-calendar__month-view__days__day {
-    color: cyan;
-}
-
-.react-calendar__year-view__months__month {
-    color: cyan;
-}
-
-.react-calendar__decade-view__years__year {
-    color: cyan;
-}
-
-.react-calendar__tile--now {
-    color: cyan;
-}
-
-.react-calendar__tile--active {
-    color: cyan;
-}
-
-.react-calendar__navigation__label__labelText {
-    color: cyan;
-}
-
-.react-calendar__navigation__arrow {
-    color: cyan;
-}
-
-
-
-.task-item {
-    color: darkgreen;
-    font-size: 1.5em; 
-    margin-bottom: 10px; 
-    transition: transform 0.3s ease;
-}
-
-.task-item:hover {
-    transform: scale(1.1);
-    background-color: yellow; 
+.profile-value {
+    flex-basis: 50%;
+    text-align: left;
+    color: black;
+    font-size: x-large;
 }

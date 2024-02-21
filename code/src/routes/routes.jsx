@@ -1,15 +1,15 @@
-import { useContext } from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import { UserContext } from "../context/usercontext.jsx";
-import Dashboard from "../pages/dashboard.jsx";
+import { Navigate, useLocation, Outlet } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectUser } from "../features/userSlice";
 
 const PrivateRoute = () => {
 
-    const { user } = useContext(UserContext);
+    const user = useSelector(selectUser);
+    console.log("Initial User: ", user)
     const location = useLocation();
     const redirectLoginUrl = `/login?redirectTo=${encodeURI(location.pathname)}`;
 
-    return !user ? <Navigate to={redirectLoginUrl} /> : <Dashboard/> ;
+    return user ? <Outlet /> : <Navigate to={redirectLoginUrl} />;
 }
 
 export default PrivateRoute;

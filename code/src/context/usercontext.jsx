@@ -1,11 +1,12 @@
-import { createContext, useState } from "react";
+import React, { createContext, useState, useContext } from "react";
 import axios from "axios";
 
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-
+    
+    
     const emailPasswordLogin = async (email, password) => {
         try{
             const url = 'http://localhost:3001/login';
@@ -21,7 +22,7 @@ export const UserProvider = ({ children }) => {
             const session_token = response.data.session_token;
             
             if (session_token !== null){
-                setUser(session_token)
+                // setUser(session_token)
                 console.log("Successfully logged in! ", session_token);
                 return session_token;
             }
@@ -63,6 +64,7 @@ export const UserProvider = ({ children }) => {
     const logOutUser = async (session_token) => {
         try {
             const url = 'http://localhost:3001/logout';
+            console.log("Logging out user: ", session_token);
             const response = await axios.post(
                 url, {
                     headers: {
@@ -70,6 +72,7 @@ export const UserProvider = ({ children }) => {
                     }
                 }
             );
+            console.log("Response: ", response);
             setUser(null);
             console.log("Successfully logged out!");
             return response;
