@@ -98,15 +98,17 @@ async def add_entry(entry: Entry):
     return {"message": "Entry added"}
 
 @app.get("/getuser")
-async def get_user(token: str = Depends(oauth2_scheme)):
-    db_user = collection.find_one({"token": token})
+async def get_user(session_token: str):
+    db_user = collection.find_one({"session_token": session_token})
+    print(db_user)
     if not db_user:
         raise HTTPException(status_code=400, detail="User not logged in")
     return db_user
 
 @app.get("/getentry")
-async def get_entry(token: str = Depends(oauth2_scheme)):
-    db_user = collection.find_one({"token": token})
+async def get_entry(session_token: str):
+    db_user = collection.find_one({"session_token": session_token})
+    print(db_user)
     if not db_user:
         raise HTTPException(status_code=400, detail="User not logged in")
     return db_user["entries"]
