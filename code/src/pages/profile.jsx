@@ -20,8 +20,8 @@ function Profile() {
     async function getUser() {
         try {
             console.log("Getting user data: ", user);
-            const response = await axios.get('http://localhost:3001/getuser', {
-                headers: {
+            const response = await axios.get('http://localhost:8000/getuser', {
+                params: {
                     session_token: user,
                 }
             });

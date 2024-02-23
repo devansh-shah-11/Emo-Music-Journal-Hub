@@ -29,6 +29,7 @@ function Dashboard(){
         }
         else {
             console.log("User logged in: ", user);
+            localStorage.setItem("user", user);
         }
     }
 
@@ -77,14 +78,12 @@ function Dashboard(){
         };
         console.log(journalEntry);
         try {
-            const response = await axios.post('http://localhost:3001/addentry', {
-                headers: {
-                    session_token: user,
-                },
-                params: {
-                    title: title,
-                    body: body
-                }
+            const url = 'http://localhost:8000/addentry'
+            const response = await axios.post(url,
+            {
+                title: title,
+                body: body,
+                session_token: user,
             });
             console.log("Response: ", response);
             if (response.status === 200) {
@@ -100,6 +99,7 @@ function Dashboard(){
     const [showSongs, setShowSongs] = useState(false);
 
     const videoRef = useRef(null);
+    const canvasRef = useRef(null);
 
     useEffect(() => {
         if (navigator.mediaDevices?.getUserMedia) {
@@ -108,6 +108,33 @@ function Dashboard(){
                     if (videoRef.current) {
                         videoRef.current.srcObject = stream;
                     }
+                    setInterval(() => {
+                        if (videoRef.current && canvasRef.current) {
+                            const video = videoRef.current;
+                            const canvas = canvasRef.current;
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            const context = canvas.getContext('2d');
+                            context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+                            canvas.toBlob(blob => {
+                                let formData = new FormData();
+                                formData.append('file', blob, 'image.png');
+                                const url = 'http://localhost:8000/predict';
+                                console.log("Sending image to server...");
+                                axios.post(url, formData, {
+                                    headers: {
+                                        'Content-Type': 'multipart/form-data'
+                                    }
+                                })
+                                .then(response => {
+                                    console.log("Image is sent to server and response is: ", response.data);
+                                })
+                                .catch(error => {
+                                    console.log(error);
+                                });
+                            }, 'image/png');
+                        }
+                    }, 60000);
                 })
                 .catch(err => console.log(err));
         }
@@ -156,6 +183,7 @@ function Dashboard(){
                     </div>
                     <div className="video-box">
                         <video ref={videoRef} id="live-video" autoPlay playsInline></video>
+                        <canvas ref={canvasRef} id="canvas" style={{display: "none"}} />
                     </div>
                 </div>
                 <button onClick={() => setShowSongs(!showSongs)} className="song-button">Generate Songs</button>

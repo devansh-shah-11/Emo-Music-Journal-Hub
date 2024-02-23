@@ -9,13 +9,11 @@ export const UserProvider = ({ children }) => {
     
     const emailPasswordLogin = async (email, password) => {
         try{
-            const url = 'http://localhost:3001/login';
+            const url = 'http://localhost:8000/login';
             const response = await axios.post(
                 url, {
-                    params: {
-                        email: email,
-                        password: password,
-                    }
+                    email: email,
+                    password: password,
                 }
             );
             console.log("Response: ", response.data);
@@ -38,17 +36,15 @@ export const UserProvider = ({ children }) => {
     const emailPasswordSignup = async (name, email, password, mobilenumber, age, occupation) => {
         console.log("Registering user...", name);
         try {
-            const url = 'http://localhost:3001/signup';
+            const url = 'http://localhost:8000/signup';
             const response = await axios.post(
                 url, {
-                    params: {
-                        name: name,
-                        email: email,
-                        password: password,
-                        mobilenumber: mobilenumber,
-                        age: age,
-                        occupation: occupation,
-                    }
+                    name: name,
+                    email: email,
+                    password: password,
+                    mobilenumber: mobilenumber,
+                    age: age,
+                    occupation: occupation,
                 }
             );
             console.log("Response: ", response)
@@ -63,15 +59,12 @@ export const UserProvider = ({ children }) => {
 
     const logOutUser = async (session_token) => {
         try {
-            const url = 'http://localhost:3001/logout';
+            const url = 'http://localhost:8000/logout';
             console.log("Logging out user: ", session_token);
             const response = await axios.post(
-                url, {
-                    headers: {
-                        session_token: session_token,
-                    }
-                }
-            );
+                url, { 
+                    session_token: session_token,
+                });
             console.log("Response: ", response);
             setUser(null);
             console.log("Successfully logged out!");
