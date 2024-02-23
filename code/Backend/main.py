@@ -9,12 +9,12 @@ import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
-# import uuid
-# from keras.preprocessing import image
-# import numpy as np
-# from tensorflow.keras.applications.resnet import preprocess_input
-# import cv2
-# from huggingface_hub import from_pretrained_keras
+import uuid
+from keras.preprocessing import image
+import numpy as np
+from tensorflow.keras.applications.resnet import preprocess_input
+import cv2
+from huggingface_hub import from_pretrained_keras
 from cachetools import cached, TTLCache
 
 IMAGEDIR = "test-faces/"
@@ -144,7 +144,7 @@ cache = TTLCache(maxsize=1, ttl=360000)
 def load_model():
     return from_pretrained_keras("DShah-11/emotion_detection_v2")
 
-@app.post("/predict/")
+@app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     file.filename = f"{uuid.uuid4()}.jpg"
     contents = await file.read()
