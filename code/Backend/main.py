@@ -8,12 +8,13 @@ import jwt
 import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-import uuid
-from keras.preprocessing import image
-import numpy as np
-from tensorflow.keras.applications.resnet import preprocess_input
-import cv2
-from huggingface_hub import from_pretrained_keras
+from datetime import datetime, timezone
+# import uuid
+# from keras.preprocessing import image
+# import numpy as np
+# from tensorflow.keras.applications.resnet import preprocess_input
+# import cv2
+# from huggingface_hub import from_pretrained_keras
 from cachetools import cached, TTLCache
 
 IMAGEDIR = "test-faces/"
@@ -45,6 +46,7 @@ class User(BaseModel):
 class Entry(BaseModel):
     title: str
     body: str
+    session_token: str
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -60,6 +62,7 @@ def create_access_token(data: dict):
 
 @app.post("/signup")
 async def signup(user: User):
+    print(user)
     if collection.find_one({"email": user.email}):
         raise HTTPException(status_code=400, detail="Email already registered")
     hashed_password = get_password_hash(user.password)
@@ -73,8 +76,8 @@ async def login(user: User):
     if not db_user or not verify_password(user.password, db_user["password"]):
         raise HTTPException(status_code=400, detail="Invalid email or password")
     access_token = create_access_token(data={"email": user.email})
-    collection.update_one({"email": user.email}, {"$set": {"token": access_token}})
-    return {"access_token": access_token, "token_type": "bearer"}
+    collection.update_one({"email": user.email}, {"$set": {"session_token": access_token}})
+    return {"session_token": access_token, "token_type": "bearer"}
 
 @app.post("/logout")
 async def logout(token: str = Depends(oauth2_scheme)):
@@ -82,13 +85,16 @@ async def logout(token: str = Depends(oauth2_scheme)):
     return {"message": "Logged out"}
 
 @app.post("/addentry")
-async def add_entry(entry: Entry, token: str = Depends(oauth2_scheme)):
-    db_user = collection.find_one({"token": token})
+async def add_entry(entry: Entry):
+    print(entry)
+    db_user = collection.find_one({"session_token": entry.session_token})
+    print(db_user)
     if not db_user:
         raise HTTPException(status_code=400, detail="User not logged in")
-    if "entries" in db_user and entry.title in db_user["entries"]:
-        raise HTTPException(status_code=400, detail="Entry already exists")
-    collection.update_one({"token": token}, {"$push": {"entries": entry.dict()}})
+    entries = db_user.get("entries", {})
+    current_date = datetime.now(timezone.utc).isoformat(timespec='microseconds')
+    entries[entry.title] = [entry.body, current_date]
+    collection.update_one({"session_token": entry.session_token}, {"$set": {"entries": entries}})
     return {"message": "Entry added"}
 
 @app.get("/getuser")

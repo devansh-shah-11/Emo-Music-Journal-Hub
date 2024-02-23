@@ -29,6 +29,7 @@ function Dashboard(){
         }
         else {
             console.log("User logged in: ", user);
+            localStorage.setItem("user", user);
         }
     }
 
@@ -77,14 +78,12 @@ function Dashboard(){
         };
         console.log(journalEntry);
         try {
-            const response = await axios.post('http://localhost:8000/addentry', {
-                headers: {
-                    session_token: user,
-                },
-                params: {
-                    title: title,
-                    body: body
-                }
+            const url = 'http://localhost:8000/addentry'
+            const response = await axios.post(url,
+            {
+                title: title,
+                body: body,
+                session_token: user,
             });
             console.log("Response: ", response);
             if (response.status === 200) {

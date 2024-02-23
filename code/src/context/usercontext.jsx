@@ -12,10 +12,8 @@ export const UserProvider = ({ children }) => {
             const url = 'http://localhost:8000/login';
             const response = await axios.post(
                 url, {
-                    params: {
-                        email: email,
-                        password: password,
-                    }
+                    email: email,
+                    password: password,
                 }
             );
             console.log("Response: ", response.data);
@@ -41,14 +39,12 @@ export const UserProvider = ({ children }) => {
             const url = 'http://localhost:8000/signup';
             const response = await axios.post(
                 url, {
-                    params: {
-                        name: name,
-                        email: email,
-                        password: password,
-                        mobilenumber: mobilenumber,
-                        age: age,
-                        occupation: occupation,
-                    }
+                    name: name,
+                    email: email,
+                    password: password,
+                    mobilenumber: mobilenumber,
+                    age: age,
+                    occupation: occupation,
                 }
             );
             console.log("Response: ", response)

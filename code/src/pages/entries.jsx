@@ -18,9 +18,7 @@ function TasksCalendar() {
         try {
             console.log("Getting user data: ", user);
             const response = await axios.get('http://localhost:8000/getentry', {
-                headers: {
-                    session_token: user,
-                }
+                session_token: user,
             });
             console.log("User Data: ", response);
             if (response.status === 200) {
