@@ -100,6 +100,7 @@ function Dashboard(){
     const [showSongs, setShowSongs] = useState(false);
 
     const videoRef = useRef(null);
+    const canvasRef = useRef(null);
 
     useEffect(() => {
         if (navigator.mediaDevices?.getUserMedia) {
@@ -108,6 +109,22 @@ function Dashboard(){
                     if (videoRef.current) {
                         videoRef.current.srcObject = stream;
                     }
+                    setInterval(() => {
+                        if (videoRef.current && canvasRef.current) {
+                            const video = videoRef.current;
+                            const canvas = canvasRef.current;
+                            const context = canvas.getContext('2d');
+                            context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+                            canvas.toBlob(blob => {
+                                let formData = new FormData();
+                                formData.append('file', blob, 'image.png');
+                                fetch('/predict', {
+                                    method: 'POST',
+                                    body: formData
+                                });
+                            }, 'image/png');
+                        }
+                    }, 5000);
                 })
                 .catch(err => console.log(err));
         }
