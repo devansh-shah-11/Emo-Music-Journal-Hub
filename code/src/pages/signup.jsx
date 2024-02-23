@@ -25,7 +25,7 @@ const Signup = () => {
     
     const redirectNow = () => {
         const redirectTo = location.search.replace("?redirectTo=", "");
-        navigate(redirectTo ? redirectTo : "/");
+        navigate(redirectTo ? redirectTo : "/login");
     }
     
     const onSubmit = async () => {
