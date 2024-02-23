@@ -47,6 +47,9 @@ class Entry(BaseModel):
     title: str
     body: str
     session_token: str
+    
+class Logout(BaseModel):
+    session_token: str
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -80,8 +83,9 @@ async def login(user: User):
     return {"session_token": access_token, "token_type": "bearer"}
 
 @app.post("/logout")
-async def logout(token: str = Depends(oauth2_scheme)):
-    collection.update_one({"token": token}, {"$set": {"token": ""}})
+async def logout(logout_data: Logout):
+    print("IN LOGOUT\n\n\n")
+    collection.update_one({"session_token": logout_data.session_token}, {"$set": {"session_token": ""}})
     return {"message": "Logged out"}
 
 @app.post("/addentry")
@@ -103,6 +107,7 @@ async def get_user(session_token: str):
     print(db_user)
     if not db_user:
         raise HTTPException(status_code=400, detail="User not logged in")
+    db_user.pop('_id', None)
     return db_user
 
 @app.get("/getentry")

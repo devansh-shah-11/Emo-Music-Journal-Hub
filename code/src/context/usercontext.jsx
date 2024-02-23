@@ -62,12 +62,9 @@ export const UserProvider = ({ children }) => {
             const url = 'http://localhost:8000/logout';
             console.log("Logging out user: ", session_token);
             const response = await axios.post(
-                url, {
-                    headers: {
-                        session_token: session_token,
-                    }
-                }
-            );
+                url, { 
+                    session_token: session_token,
+                });
             console.log("Response: ", response);
             setUser(null);
             console.log("Successfully logged out!");
