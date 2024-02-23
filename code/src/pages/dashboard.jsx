@@ -77,7 +77,7 @@ function Dashboard(){
         };
         console.log(journalEntry);
         try {
-            const response = await axios.post('http://localhost:3001/addentry', {
+            const response = await axios.post('http://localhost:8000/addentry', {
                 headers: {
                     session_token: user,
                 },
