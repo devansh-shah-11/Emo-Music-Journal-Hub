@@ -64,6 +64,9 @@ class Entry(BaseModel):
     
 class Logout(BaseModel):
     session_token: str
+    
+class TextPrediction(BaseModel):
+    text: str
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -221,12 +224,12 @@ def load_tokenizer():
     return keras.preprocessing.text.tokenizer_from_json(json_str)
 
 @app.post("/predicttext")
-async def predict_text(text: str):
+async def predict_text(text: TextPrediction):
     tokenizer = load_tokenizer()
     print("\n\nTokenizer loaded\n\n")
     model = load_model(model_name="DShah-11/sentiment_analysis_v1")
     print("\n\nModel loaded\n\n")
     classes = ['sadness', 'anger', 'love', 'surprise', 'fear', 'happy']
-    index = predict_emotion(tokenizer, model, text)
+    index = predict_emotion(tokenizer, model, text.text)
     print(f"Predicted class is {classes[index]}")
     return {"prediction": f"{classes[index]}"}

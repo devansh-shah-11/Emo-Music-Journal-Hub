@@ -88,6 +88,14 @@ function Dashboard(){
             console.log("Response: ", response);
             if (response.status === 200) {
                 alert("Journal saved successfully!");
+                console.log("Now predicting emotion...")
+                const url = 'http://localhost:8000/predicttext'
+                const response = await axios.post(url,
+                {
+                    text: body,
+                });
+                console.log("Predicted emotion is: ", response);
+                alert("Predicted emotion is: " + response.data.prediction);
             }
             setTitle('');
             setBody('');
