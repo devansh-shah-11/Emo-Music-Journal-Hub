@@ -13,9 +13,23 @@ import uuid
 from keras.preprocessing import image
 import numpy as np
 from tensorflow.keras.applications.resnet import preprocess_input
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 import cv2
+import re
 from huggingface_hub import from_pretrained_keras
 from cachetools import cached, TTLCache
+import json
+import keras
+
+import nltk
+from nltk.corpus import wordnet,stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('stopwords')
+nltk.download('averaged_perceptron_tagger')
 
 IMAGEDIR = "test-faces/"
 
@@ -141,8 +155,8 @@ def preprocess_image(img_path):
 cache = TTLCache(maxsize=1, ttl=360000)
 
 @cached(cache)
-def load_model():
-    return from_pretrained_keras("DShah-11/emotion_detection_v2")
+def load_model(model_name):
+    return from_pretrained_keras(model_name)
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
@@ -153,7 +167,7 @@ async def predict(file: UploadFile = File(...)):
     with open(f"{IMAGEDIR}{file.filename}", "wb") as f:
         f.write(contents)
     img_array = preprocess_image(f"{IMAGEDIR}{file.filename}")
-    model = load_model()
+    model = load_model(model_name="DShah-11/emotion_detection_v2")
     classes = ["anger", "contempt", "disgust", "fear", "happy", "sadness", "surprise"]
     prediction = model.predict(img_array)
     print(prediction)
@@ -161,3 +175,58 @@ async def predict(file: UploadFile = File(...)):
     print(prediction)
     print(f'The image is a {classes[int(np.argmax(prediction))]}!')
     return {"prediction": f'The image is a {classes[int(np.argmax(prediction))]}!'}
+
+def get_wordnet_pos(tag):
+    """Mapping the word to the correct POS tag for lemmatization."""
+    if tag.startswith('J'):
+        return wordnet.ADJ
+    elif tag.startswith('V'):
+        return wordnet.VERB
+    elif tag.startswith('N'):
+        return wordnet.NOUN
+    elif tag.startswith('R'):
+        return wordnet.ADV
+    else:
+        return wordnet.NOUN 
+
+def lemmatize_sentence(sentence):
+    """Lemmatizing the sentence and removing the stop words."""
+    lemmatizer = WordNetLemmatizer()
+    stop_words = set(stopwords.words('english'))
+
+    tokens = word_tokenize(sentence)
+    pos_tags = nltk.pos_tag(tokens)
+    
+    lemmatized_words = [lemmatizer.lemmatize(word, pos=get_wordnet_pos(tag)) for word, tag in pos_tags]
+    lemmatized_words_no_stopwords = [word for word in lemmatized_words if word.lower() not in stop_words]
+    
+    return ' '.join(lemmatized_words_no_stopwords)
+
+def predict_emotion(tokenizer, model, sent):
+    sent = re.sub('[^a-zA-Z]', ' ', sent)
+    sent = sent.lower()
+    result = lemmatize_sentence(sent)
+    print(result)
+    sequence = tokenizer.texts_to_sequences([result])
+    print(sequence)
+    embedding = pad_sequences(sequence, maxlen=40, padding='pre')
+    prediction = model.predict(embedding)
+    predicted_class = prediction.argmax()
+    return predicted_class
+
+@cached(cache)
+def load_tokenizer():
+    with open('../ML/tokenizer.json','r',encoding='utf-8') as f:
+        json_str = json.loads(f.read())
+    return keras.preprocessing.text.tokenizer_from_json(json_str)
+
+@app.post("/predicttext")
+async def predict_text(text: str):
+    tokenizer = load_tokenizer()
+    print("\n\nTokenizer loaded\n\n")
+    model = load_model(model_name="DShah-11/sentiment_analysis_v1")
+    print("\n\nModel loaded\n\n")
+    classes = ['sadness', 'anger', 'love', 'surprise', 'fear', 'happy']
+    index = predict_emotion(tokenizer, model, text)
+    print(f"Predicted class is {classes[index]}")
+    return {"prediction": f"{classes[index]}"}
