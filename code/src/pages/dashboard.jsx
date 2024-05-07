@@ -15,6 +15,9 @@ function Dashboard(){
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
 
+    const [predictedEmotionText, setPredictedEmotionText] = useState('');
+    const [predictedEmotionFace, setPredictedEmotionFace] = useState('');
+
     let user = useSelector(selectUser);
     console.log("User from redux: ", user);
     if(user === "null" || !user) {
@@ -90,12 +93,16 @@ function Dashboard(){
                 alert("Journal saved successfully!");
                 console.log("Now predicting emotion...")
                 const url = 'http://localhost:8000/predicttext'
-                const response = await axios.post(url,
-                {
-                    text: body,
+                const formData = new FormData();
+                formData.append('text', JSON.stringify({ text: body }));
+                formData.append('session_token', user);
+                const response = await axios.post(url, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
                 });
+                setPredictedEmotionText(response.data.prediction);
                 console.log("Predicted emotion is: ", response);
-                alert("Predicted emotion is: " + response.data.prediction);
             }
             setTitle('');
             setBody('');
@@ -127,22 +134,24 @@ function Dashboard(){
                             canvas.toBlob(blob => {
                                 let formData = new FormData();
                                 formData.append('file', blob, 'image.png');
+                                formData.append('session_token', user);
                                 const url = 'http://localhost:8000/predict';
                                 console.log("Sending image to server...");
                                 axios.post(url, formData, {
                                     headers: {
-                                        'Content-Type': 'multipart/form-data'
+                                        'Content-Type': 'multipart/form-data',
                                     }
                                 })
                                 .then(response => {
                                     console.log("Image is sent to server and response is: ", response.data);
+                                    setPredictedEmotionFace(response.data.prediction);
                                 })
                                 .catch(error => {
                                     console.log(error);
                                 });
                             }, 'image/png');
                         }
-                    }, 60000);
+                    }, 6000);
                 })
                 .catch(err => console.log(err));
         }
@@ -164,6 +173,7 @@ function Dashboard(){
                                     <div className="dropdown-content">
                                     <a href="/myprofile" onClick={redirectProfile} className="nav-link">My Profile</a>
                                     <a href="#logout" className="nav-link" onClick={logOut}>Logout</a>
+                                    <a href="/feedback" onClick={redirectProfile} className="nav-link">Feedback</a>
                                 </div>
                             </div>
                     </div>
@@ -192,6 +202,8 @@ function Dashboard(){
                     <div className="video-box">
                         <video ref={videoRef} id="live-video" autoPlay playsInline></video>
                         <canvas ref={canvasRef} id="canvas" style={{display: "none"}} />
+                        <br></br>
+                        <br></br>
                     </div>
                 </div>
                 <button onClick={() => setShowSongs(!showSongs)} className="song-button">Generate Songs</button>
@@ -208,7 +220,13 @@ function Dashboard(){
                         </ol>
                     </div>
                 )}
+                <div className="center-screen">
+                    <div>Predicted Emotion based on Face: {predictedEmotionFace}</div>
+                    <div></div>
+                    <div>Predicted Emotion based on Text: {predictedEmotionText}</div>
+                </div>
             </div>
+            
         ) : (
             <div>
                 <h1 style={{color: "red"}}>Not logged in</h1>

@@ -6,7 +6,7 @@ import PrivateRoute from "./routes.jsx";
 import Dashboard from "../pages/dashboard.jsx";
 import TasksCalendar from "../pages/entries.jsx";
 import Profile from "../pages/profile.jsx";
-
+import Feedback from "../pages/feedback.jsx"
 
 function Nav() {
     return (
@@ -21,6 +21,7 @@ function Nav() {
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route path="view_entry" element={<TasksCalendar />} />
                     <Route path="myprofile" element={<Profile />} />
+                    <Route path="feedback" element={<Feedback />} />
                 </Routes>
             </UserProvider>
         </BrowserRouter>

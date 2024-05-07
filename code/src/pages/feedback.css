@@ -1,0 +1,28 @@
+.feedback-container {
+    background-color: #000; /* Black background */
+    color: #fff; /* White text */
+    padding: 20px;
+    border-radius: 8px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 1px solid #444; /* Dark grey border for subtle contrast */
+}
+
+th {
+    background-color: #333; /* Darker background for header */
+}
+
+img {
+    width: 100px;
+    height: auto;
+    border-radius: 5px;
+}
