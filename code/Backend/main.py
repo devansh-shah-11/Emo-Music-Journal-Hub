@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
+from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Form, Response, Request, WebSocket
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
+import base64
 from typing import Optional
 from pymongo import MongoClient
 from passlib.context import CryptContext
@@ -20,7 +21,8 @@ from huggingface_hub import from_pretrained_keras
 from cachetools import cached, TTLCache
 import json
 import keras
-
+from bson.binary import Binary
+import pickle
 import nltk
 from nltk.corpus import wordnet,stopwords
 from nltk.stem import WordNetLemmatizer
@@ -162,7 +164,7 @@ def load_model(model_name):
     return from_pretrained_keras(model_name)
 
 @app.post("/predict")
-async def predict(file: UploadFile = File(...)):
+async def predict(file: UploadFile = File(...), session_token: str = Form(...)):
     file.filename = f"{uuid.uuid4()}.jpg"
     contents = await file.read()
     os.makedirs(IMAGEDIR, exist_ok=True)
@@ -176,8 +178,17 @@ async def predict(file: UploadFile = File(...)):
     print(prediction)
     prediction = np.squeeze(np.round(prediction))
     print(prediction)
-    print(f'The image is a {classes[int(np.argmax(prediction))]}!')
-    return {"prediction": f'The image is a {classes[int(np.argmax(prediction))]}!'}
+    emotion = classes[int(np.argmax(prediction))]
+    print(f'The image is a {emotion}!')
+    
+    face_entry = {
+        "timestamp": datetime.now(),
+        "filename": file.filename,
+        "predicted_emotion": emotion
+    }
+    # collection.update_one({"session_token": session_token}, {"$push": {"face_entry": face_entry}})
+    
+    return {"prediction": emotion}
 
 def get_wordnet_pos(tag):
     """Mapping the word to the correct POS tag for lemmatization."""
@@ -224,12 +235,122 @@ def load_tokenizer():
     return keras.preprocessing.text.tokenizer_from_json(json_str)
 
 @app.post("/predicttext")
-async def predict_text(text: TextPrediction):
+async def predict_text(text: str = Form(...), session_token: str = Form(...)):
+    input_text = json.loads(text)
+    text = input_text['text']
+    print("Text written: ",text)
     tokenizer = load_tokenizer()
     print("\n\nTokenizer loaded\n\n")
     model = load_model(model_name="DShah-11/sentiment_analysis_v1")
     print("\n\nModel loaded\n\n")
-    classes = ['sadness', 'anger', 'love', 'surprise', 'fear', 'happy']
-    index = predict_emotion(tokenizer, model, text.text)
-    print(f"Predicted class is {classes[index]}")
-    return {"prediction": f"{classes[index]}"}
+    classes = ['Sadness', 'Anger', 'Love', 'Surprise', 'Fear', 'Happy']
+    index = predict_emotion(tokenizer, model, text)
+    emotion = classes[index]
+    print(f"Predicted class is {emotion}")
+    text_entry = {
+        "timestamp": datetime.now(),
+        "text": text,
+        "predicted_emotion": emotion
+    }
+    collection.update_one({"session_token": session_token}, {"$push": {"text_entry": text_entry}})
+
+    
+    return {"prediction": f"{emotion}"}
+
+
+@app.get("/get_text_entries")
+async def get_text_entries(session_token: str):
+    db_user = collection.find_one({"session_token": session_token})
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found or not logged in")
+
+    text_entry = db_user.get("text_entry", [])
+    return {"entries": text_entry}
+
+
+@app.get("/get_image/{filename}")
+async def get_image(filename: str):
+    image_directory = "test-faces"
+    image_path = os.path.join(image_directory, filename)
+
+    if not os.path.isfile(image_path):
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    with open(image_path, "rb") as image_file:
+        image_data = image_file.read()
+
+    return Response(content=image_data, media_type="image/jpeg")
+
+# @app.get("/get_user_images")
+# async def get_user_images(request: Request, session_token: str):
+#     db_user = collection.find_one({"session_token": session_token})
+#     if not db_user:
+#         raise HTTPException(status_code=404, detail="User not found or not logged in")
+
+#     face_entry = db_user.get("face_entry", [])
+#     image_urls = [f"{request.url_for('get_image', filename=entry['filename'])}" for entry in face_entry]
+#     return {"image_urls": image_urls}
+
+
+@app.get("/get_user_images")
+async def get_user_images(session_token: str):
+    db_user = collection.find_one({"session_token": session_token})
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found or not logged in")
+
+    face_entry = db_user.get("face_entry", [])
+    image_directory = "test-faces"
+    images_base64 = []
+
+    for entry in face_entry:
+        image_path = os.path.join(image_directory, entry['filename'])
+        if os.path.isfile(image_path):
+            with open(image_path, "rb") as image_file:
+                image_data = image_file.read()
+                base64_encoded_data = base64.b64encode(image_data)
+                base64_message = base64_encoded_data.decode('utf-8')
+                images_base64.append({
+                    "filename": entry['filename'],
+                    "data": base64_message,
+                    "emotion": entry['predicted_emotion']
+                })
+
+    return {"images": images_base64}
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        # Receive session token from client
+        session_token = await websocket.receive_text()
+
+        # Find user in the database
+        db_user = collection.find_one({"session_token": session_token})
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found or not logged in")
+
+        face_entry = db_user.get("face_entry", [])
+        image_directory = "test-faces"
+
+        # Send images periodically
+        for entry in face_entry:
+            image_path = os.path.join(image_directory, entry['filename'])
+            if os.path.isfile(image_path):
+                with open(image_path, "rb") as image_file:
+                    image_data = image_file.read()
+                    base64_encoded_data = base64.b64encode(image_data)
+                    base64_message = base64_encoded_data.decode('utf-8')
+                    await websocket.send_json({
+                        "filename": entry['filename'],
+                        "data": base64_message,
+                        "emotion": entry['predicted_emotion']
+                    })
+
+    except HTTPException as e:
+        # Send error message to client before closing
+        await websocket.send_text(str(e.detail))
+        await websocket.close()
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        await websocket.close()
