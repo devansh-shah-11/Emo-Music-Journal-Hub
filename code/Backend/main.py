@@ -354,3 +354,22 @@ async def websocket_endpoint(websocket: WebSocket):
         print(f"Error: {e}")
     finally:
         await websocket.close()
+        
+@app.post("/image_feedback")
+async def image_feedback(file: UploadFile = File(...), emotion: str = Form(...), session_token: str = Form(...)):
+    file.filename = f"{uuid.uuid4()}.jpg"
+    contents = await file.read()
+    os.makedirs(IMAGEDIR, exist_ok=True)
+    #save the file
+    with open(f"{IMAGEDIR}{file.filename}", "wb") as f:
+        f.write(contents)
+    
+    feedback_entry = {
+        "filename": file.filename,
+        "corrected_emotion": emotion
+    }
+    collection.update_one({"session_token": session_token}, {"$push": {"feedback": feedback_entry}})
+    # collection.update_one({"session_token": session_token}, {"$push": {"face_entry": face_entry}})
+    
+    return {"prediction": emotion}
+
