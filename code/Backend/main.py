@@ -321,10 +321,8 @@ async def get_user_images(session_token: str):
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
-        # Receive session token from client
         session_token = await websocket.receive_text()
 
-        # Find user in the database
         db_user = collection.find_one({"session_token": session_token})
         if not db_user:
             raise HTTPException(status_code=404, detail="User not found or not logged in")
@@ -332,7 +330,6 @@ async def websocket_endpoint(websocket: WebSocket):
         face_entry = db_user.get("face_entry", [])
         image_directory = "test-faces"
 
-        # Send images periodically
         for entry in face_entry:
             image_path = os.path.join(image_directory, entry['filename'])
             if os.path.isfile(image_path):
@@ -356,20 +353,13 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.close()
         
 @app.post("/image_feedback")
-async def image_feedback(file: UploadFile = File(...), emotion: str = Form(...), session_token: str = Form(...)):
-    file.filename = f"{uuid.uuid4()}.jpg"
-    contents = await file.read()
-    os.makedirs(IMAGEDIR, exist_ok=True)
-    #save the file
-    with open(f"{IMAGEDIR}{file.filename}", "wb") as f:
-        f.write(contents)
+async def image_feedback(file: str = Form(...), emotion: str = Form(...), session_token: str = Form(...)):
     
     feedback_entry = {
-        "filename": file.filename,
+        "filename": file,
         "corrected_emotion": emotion
     }
     collection.update_one({"session_token": session_token}, {"$push": {"feedback": feedback_entry}})
-    # collection.update_one({"session_token": session_token}, {"$push": {"face_entry": face_entry}})
     
-    return {"prediction": emotion}
+    return {"message": "Feedback added"}
 
