@@ -342,6 +342,13 @@ async def websocket_endpoint(websocket: WebSocket):
                         "data": base64_message,
                         "emotion": entry['predicted_emotion']
                     })
+        
+        text_entry = db_user.get("text_entry", [])
+        for entry in text_entry:
+            await websocket.send_json({
+                "text": entry['text'],
+                "emotion": entry['predicted_emotion']
+            })
 
     except HTTPException as e:
         # Send error message to client before closing
@@ -359,7 +366,17 @@ async def image_feedback(file: str = Form(...), emotion: str = Form(...), sessio
         "filename": file,
         "corrected_emotion": emotion
     }
-    collection.update_one({"session_token": session_token}, {"$push": {"feedback": feedback_entry}})
+    collection.update_one({"session_token": session_token}, {"$push": {"image_feedback": feedback_entry}})
     
     return {"message": "Feedback added"}
 
+@app.post("/text_feedback")
+async def text_feedback(text:str = Form(), emotion: str = Form(...), session_token: str = Form(...)):
+    
+    feedback_entry = {
+        "text": text,
+        "corrected_emotion": emotion
+    }
+    collection.update_one({"session_token": session_token}, {"$push": {"text_feedback": feedback_entry}})
+    
+    return {"message": "Feedback added"}

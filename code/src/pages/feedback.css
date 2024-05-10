@@ -1,20 +1,28 @@
 .feedback-container {
-    background-color: #000; /* Black background */
-    color: #fff; /* White text */
+    background-color: black; /* Update to cyan background */
+    color: cyan; /* Update to black text */
     padding: 20px;
     border-radius: 8px;
+    text-align: center;
+}
+
+.empty_text{
+    font-size: xx-large;
+    color: cyan;
+    margin-top: 400px;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    margin-top: 50px;
 }
 
 th, td {
-    text-align: left;
+    text-align: center;
     padding: 8px;
-    border-bottom: 1px solid #444; /* Dark grey border for subtle contrast */
+    border-bottom: 1px solid gold; /* Dark grey border for subtle contrast */
+    font-size: x-large;
 }
 
 th {
@@ -22,7 +30,34 @@ th {
 }
 
 img {
-    width: 100px;
-    height: auto;
+    height: auto; /* Maintain aspect ratio */
     border-radius: 5px;
+}
+
+td:nth-child(1) img {
+    max-width: 250px; /* Increase the max-width of images in the first column */
+}
+
+td:nth-child(2) {
+    width: 30%;
+}
+
+td:nth-child(3) {
+    width: 20%;
+}
+
+td:nth-child(4) {
+    width: 20%; /* Set the width of the fourth column */
+}
+
+select {
+    width: 50%; /* Ensure select elements take 50% width */
+    padding: 5px; /* Adjust padding for select elements */
+    font-size: large;
+}
+
+button[type="submit"] {
+    width: 50%; /* Ensure submit button takes 50% width */
+    padding: 5px; /* Adjust padding for submit button */
+    font-size: large;
 }
