@@ -1,9 +1,10 @@
 .feedback-container {
-    background-color: black; /* Update to cyan background */
-    color: cyan; /* Update to black text */
+    background-color: black; 
+    color: cyan; 
     padding: 20px;
     border-radius: 8px;
     text-align: center;
+    font-size: xx-large;
 }
 
 .empty_text{
@@ -21,21 +22,21 @@ table {
 th, td {
     text-align: center;
     padding: 8px;
-    border-bottom: 1px solid gold; /* Dark grey border for subtle contrast */
+    border-bottom: 1px solid gold;
     font-size: x-large;
 }
 
 th {
-    background-color: #333; /* Darker background for header */
+    background-color: #333; 
 }
 
 img {
-    height: auto; /* Maintain aspect ratio */
+    height: auto;
     border-radius: 5px;
 }
 
 td:nth-child(1) img {
-    max-width: 250px; /* Increase the max-width of images in the first column */
+    max-width: 250px; 
 }
 
 td:nth-child(2) {
@@ -47,17 +48,51 @@ td:nth-child(3) {
 }
 
 td:nth-child(4) {
-    width: 20%; /* Set the width of the fourth column */
+    width: 20%; 
 }
 
 select {
-    width: 50%; /* Ensure select elements take 50% width */
-    padding: 5px; /* Adjust padding for select elements */
-    font-size: large;
+    width: 30%; 
+    padding: 5px; 
+    font-size: medium;
+    color: black;
+    background-color: cyan;
+    font-weight: bolder;
+    text-align: center;
+    border: 4px solid green;
 }
 
-button[type="submit"] {
-    width: 50%; /* Ensure submit button takes 50% width */
-    padding: 5px; /* Adjust padding for submit button */
-    font-size: large;
+.button-select button {
+    width: 30%;
+    text-align: center;
+    font-size: x-large;
+    color: black;
+    background-color: cyan;
+    border: 4px solid green;
+}
+
+.feedback-buttons {
+    display: flex;
+    justify-content: space-between;
+    background-color: gray;
+    padding: 10px;
+}
+
+.feedback-buttons button {
+    margin-left: 10%;
+    width: 50%;
+    background-color: cyan;
+    color: black;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: x-large;
+    border: 4px solid green;
+    margin-right: 10%;
+}
+
+.feedback-buttons button:hover {
+    background-color: green;
+    border: 4px solid cyan;
 }
