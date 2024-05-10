@@ -317,8 +317,8 @@ async def get_user_images(session_token: str):
 
     return {"images": images_base64}
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+@app.websocket("/ws/{feedback_type}")
+async def websocket_endpoint(websocket: WebSocket, feedback_type: str):
     await websocket.accept()
     try:
         session_token = await websocket.receive_text()
@@ -327,28 +327,32 @@ async def websocket_endpoint(websocket: WebSocket):
         if not db_user:
             raise HTTPException(status_code=404, detail="User not found or not logged in")
 
-        face_entry = db_user.get("face_entry", [])
-        image_directory = "test-faces"
-
-        for entry in face_entry:
-            image_path = os.path.join(image_directory, entry['filename'])
-            if os.path.isfile(image_path):
-                with open(image_path, "rb") as image_file:
-                    image_data = image_file.read()
-                    base64_encoded_data = base64.b64encode(image_data)
-                    base64_message = base64_encoded_data.decode('utf-8')
-                    await websocket.send_json({
-                        "filename": entry['filename'],
-                        "data": base64_message,
-                        "emotion": entry['predicted_emotion']
-                    })
-        
-        text_entry = db_user.get("text_entry", [])
-        for entry in text_entry:
-            await websocket.send_json({
-                "text": entry['text'],
-                "emotion": entry['predicted_emotion']
-            })
+        if feedback_type == "image":
+            face_entry = db_user.get("face_entry", [])
+            image_directory = "test-faces"
+            filenames = [entry["filename"] for entry in db_user.get("image_feedback", [])] # Already feedback given
+            face_entry = [entry for entry in face_entry if entry["filename"] not in filenames]
+            for entry in face_entry:
+                image_path = os.path.join(image_directory, entry['filename'])
+                if os.path.isfile(image_path):
+                    with open(image_path, "rb") as image_file:
+                        image_data = image_file.read()
+                        base64_encoded_data = base64.b64encode(image_data)
+                        base64_message = base64_encoded_data.decode('utf-8')
+                        await websocket.send_json({
+                            "filename": entry['filename'],
+                            "data": base64_message,
+                            "emotion": entry['predicted_emotion']
+                        })
+        elif feedback_type == "text":
+            text_entry = db_user.get("text_entry", [])
+            filenames = [entry["filename"] for entry in db_user.get("text_feedback", [])] # Already feedback given
+            text_entry = [entry for entry in text_entry if entry["filename"] not in filenames]
+            for entry in text_entry:
+                await websocket.send_json({
+                    "text": entry['text'],
+                    "emotion": entry['predicted_emotion']
+                })
 
     except HTTPException as e:
         # Send error message to client before closing

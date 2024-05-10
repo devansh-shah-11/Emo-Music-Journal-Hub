@@ -10,7 +10,7 @@ function TextFeedback() {
 
     useEffect(() => {
         
-        const websocket = new WebSocket('ws://localhost:8000/ws');
+        const websocket = new WebSocket('ws://localhost:8000/ws/text');
     
         websocket.onopen = () => {
             websocket.send(token);
@@ -103,7 +103,9 @@ function TextFeedback() {
                                     </select>
                                 </td>
                                 <td>
+                                <div className='button-select'>
                                     <button onClick={() => handleSubmit(txt, index)}>Submit</button>
+                                </div>
                                 </td>
                             </tr>
                         ))}

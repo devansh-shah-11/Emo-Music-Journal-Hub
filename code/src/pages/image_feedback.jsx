@@ -9,7 +9,7 @@ function ImageFeedback() {
 
     useEffect(() => {
         
-        const websocket = new WebSocket('ws://localhost:8000/ws');
+        const websocket = new WebSocket('ws://localhost:8000/ws/image');
     
         websocket.onopen = () => {
             websocket.send(token);
@@ -72,42 +72,46 @@ function ImageFeedback() {
     
 
     return (
-        <div className="feedback-container">
-            <h1 className="Heading">Image Predictions</h1>
+        <div className="feedback-container"> 
             {images.length === 0 ? (
                 <h1 className="emptyText">No pending images for feedback</h1>
             ) : (
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Model Prediction</th>
-                            <th>Actual Emotion</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {images.map((img, index) => (
-                            <tr key={index}>
-                                <td>
-                                    <img src={`data:image/jpeg;base64,${img.data}`} alt="Prediction" />
-                                </td>
-                                <td>{img.emotion}</td>
-                                <td>
-                                    <select value={selectedEmotions[index]} onChange={(event) => handleEmotionChange(index, event)}>
-                                        <option value="">Select Emotion</option>
-                                        {imageEmotions.map((emotion, idx) => (
-                                            <option key={idx} value={emotion}>{emotion}</option>
-                                        ))}
-                                    </select>
-                                </td>
-                                <td>
-                                    <button onClick={() => handleSubmit(img, index)}>Submit</button>
-                                </td>
+                <div>
+                    <h1 className="Heading">Image Predictions</h1>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Model Prediction</th>
+                                <th>Actual Emotion</th>
+                                <th>Action</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {images.map((img, index) => (
+                                <tr key={index}>
+                                    <td>
+                                        <img src={`data:image/jpeg;base64,${img.data}`} alt="Prediction" />
+                                    </td>
+                                    <td>{img.emotion}</td>
+                                    <td>
+                                        <select value={selectedEmotions[index]} onChange={(event) => handleEmotionChange(index, event)}>
+                                            <option value="">Select Emotion</option>
+                                            {imageEmotions.map((emotion, idx) => (
+                                                <option key={idx} value={emotion}>{emotion}</option>
+                                            ))}
+                                        </select>
+                                    </td>
+                                    <td>
+                                    <div className='button-select'>
+                                        <button onClick={() => handleSubmit(img, index)}>Submit</button>
+                                    </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );
