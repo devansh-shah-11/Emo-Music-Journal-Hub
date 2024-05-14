@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Form, Response, Request, WebSocket
+import torch
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline, WhisperProcessor
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 import base64
@@ -69,6 +71,12 @@ class Logout(BaseModel):
     
 class TextPrediction(BaseModel):
     text: str
+
+class Item(BaseModel):
+    audioData: str
+    language: str
+    
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -162,6 +170,50 @@ cache = TTLCache(maxsize=1, ttl=360000)
 @cached(cache)
 def load_model(model_name):
     return from_pretrained_keras(model_name)
+
+@cached(cache)
+def load_model(model_id):
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+
+    model = AutoModelForSpeechSeq2Seq.from_pretrained(
+        model_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
+    )
+    model.to(device)
+    
+    processor = AutoProcessor.from_pretrained(model_id)
+
+    pipe = pipeline(
+        "automatic-speech-recognition",
+        model=model,
+        tokenizer=processor.tokenizer,
+        feature_extractor=processor.feature_extractor,
+        max_new_tokens=128,
+        chunk_length_s=10,
+        generate_kwargs={"language": "en", "task": "translate"},
+        return_timestamps=True,
+        torch_dtype=torch_dtype,
+        device=device,
+    )       
+
+    return pipe
+
+@app.post("/transcription")
+async def create_transcription(item: Item):
+    try:
+        model_id = "openai/whisper-tiny"
+        pipe = load_model(model_id)
+        print("Model and pipeline loaded!!")
+        audio_data = base64.b64decode(item.audioData)
+        transcription = pipe(audio_data)
+        print(transcription)
+        transcription = transcription['text'].replace("Thank you.", "")
+        transcription = transcription.replace("watch again", "")
+        transcription = transcription.replace("Love you", "")
+        return {"transcription": transcription}
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...), session_token: str = Form(...)):
