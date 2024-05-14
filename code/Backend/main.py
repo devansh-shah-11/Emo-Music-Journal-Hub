@@ -172,7 +172,7 @@ def load_model(model_name):
     return from_pretrained_keras(model_name)
 
 @cached(cache)
-def load_model(model_id):
+def load_ml_model(model_id):
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
@@ -202,7 +202,7 @@ def load_model(model_id):
 async def create_transcription(item: Item):
     try:
         model_id = "openai/whisper-tiny"
-        pipe = load_model(model_id)
+        pipe = load_ml_model(model_id)
         print("Model and pipeline loaded!!")
         audio_data = base64.b64decode(item.audioData)
         transcription = pipe(audio_data)
