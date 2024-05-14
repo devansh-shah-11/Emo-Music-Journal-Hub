@@ -171,6 +171,16 @@ function Dashboard(){
 
     const SaveJournal = async () => {
 
+        if (!title.trim()) {
+            alert("Please enter a title for the journal entry");
+            return;
+        }
+    
+        if (!body.trim()) {
+            alert("Please enter the body of the journal entry");
+            return;
+        }
+
         console.log("Saving Journal...");
         console.log(`Title: ${title}`);
         console.log(`Body: ${body}`);
