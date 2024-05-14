@@ -18,6 +18,13 @@ function Dashboard(){
     const [predictedEmotionText, setPredictedEmotionText] = useState('');
     const [predictedEmotionFace, setPredictedEmotionFace] = useState('');
 
+    const [isRecording, setIsRecording] = useState(false);
+    const [transcription, setTranscription] = useState("");
+    const mediaRecorderRef = useRef(null);
+    const streamRef = useRef(null);
+    const [enableTranscription, setEnableTranscription] = useState(false);
+    const transcriptionTextAreaRef = useRef();
+
     let user = useSelector(selectUser);
     console.log("User from redux: ", user);
     if(user === "null" || !user) {
@@ -68,6 +75,99 @@ function Dashboard(){
         console.log("Current User: ", user)
         window.location.href = path;
     }
+
+    const toggleRecording = () => {
+        if (!streamRef.current || !mediaRecorderRef.current) {
+        console.log("stream or mediarecorder not defined");
+        return;
+        }
+        if (mediaRecorderRef.current.state === "recording") {
+        mediaRecorderRef.current.stop();
+        } else {
+        mediaRecorderRef.current.ondataavailable = handleDataAvailable;
+        mediaRecorderRef.current.start();
+        }
+        setIsRecording(mediaRecorderRef.current.state === "recording");
+    };
+
+    useEffect(() => {
+        navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then((stream) => {
+            console.log("stream set");
+            streamRef.current = stream;
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+        })
+        .catch((error) => {
+            console.error("Error accessing microphone:", error);
+        });
+    }, []);
+
+    useEffect(() => {
+        let interval = null;
+        if (!enableTranscription) {
+        if (interval) {
+            clearInterval(interval);
+            toggleRecording();
+        }
+        return;
+        }
+
+        toggleRecording();
+        interval = setInterval(() => {
+        toggleRecording();
+        setTimeout(() => {
+            console.log("toggling back");
+            toggleRecording();
+        }, 100);
+        }, 3500);
+
+        return () => {
+        interval && clearInterval(interval);
+        toggleRecording();
+        };
+    }, [enableTranscription]);
+
+    const handleDataAvailable = async (event) => {
+        const audioBlob = event.data;
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = async function () {
+        const base64Data = reader.result.split(",")[1];
+        console.log(base64Data)
+        try {
+            const response = await fetch("http://localhost:8000/transcription", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            // body: JSON.stringify({ audioData: base64Data, language: "en" }),
+            body: JSON.stringify({ audioData: base64Data, language: "en"}),
+            });
+
+            if (!response.ok) {
+            throw new Error("Failed to transcribe audio");
+            }
+
+            const data = await response.json();
+            console.log("Spoken audio is: ", data)
+            setBody(
+                (prevBody) => `${prevBody} ${data.transcription}`
+            );
+        } catch (error) {
+            console.error("Error transcribing audio:", error);
+        }
+        };
+    };
+
+    const handleEnableTranscription = () => {
+        setEnableTranscription((currState) => !currState);
+    };
+
+    const handleClearTranscript = () => {
+        setBody("");
+    };
 
     const SaveJournal = async () => {
 
@@ -151,7 +251,7 @@ function Dashboard(){
                                 });
                             }, 'image/png');
                         }
-                    }, 6000);
+                    }, 60000);
                 })
                 .catch(err => console.log(err));
         }
@@ -164,18 +264,18 @@ function Dashboard(){
                     <div className="navbar-content">
                         <div className="app-name">Smart Journal</div>
                         <div className="spacer"></div>
-                            <div className="nav-items">
-                                <a href="/view_entry" onClick={redirectNow('/view_entry')} style={{textDecoration: "none"}}>View Past Entries</a>
+                        <div className="nav-items">
+                            <a href="/view_entry" onClick={redirectNow('/view_entry')} style={{ textDecoration: "none" }}>View Past Entries</a>
+                        </div>
+                        <div className="dropdown" style={{ height: "90px" }}>
+                            <button className="dropbtn">Profile
+                            </button>
+                            <div className="dropdown-content">
+                                <a href="/myprofile" onClick={redirectProfile} className="nav-link">My Profile</a>
+                                <a href="#logout" className="nav-link" onClick={logOut}>Logout</a>
+                                <a href="/feedback" onClick={redirectProfile} className="nav-link">Feedback</a>
                             </div>
-                                <div className="dropdown" style={{height: "90px"}}>
-                                    <button className="dropbtn">Profile
-                                    </button>
-                                    <div className="dropdown-content">
-                                    <a href="/myprofile" onClick={redirectProfile} className="nav-link">My Profile</a>
-                                    <a href="#logout" className="nav-link" onClick={logOut}>Logout</a>
-                                    <a href="/feedback" onClick={redirectProfile} className="nav-link">Feedback</a>
-                                </div>
-                            </div>
+                        </div>
                     </div>
                 </div>
                 <br></br>
@@ -184,39 +284,47 @@ function Dashboard(){
                 <div className="dashboard-content">
                     <div className="left-space"></div>
                     <div className="text-box">
-                        <input 
-                            type="text" 
-                            placeholder="Title" 
-                            className="title-input" 
+                        <input
+                            type="text"
+                            placeholder="Title"
+                            className="title-input"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                         />
-                        <textarea 
-                            placeholder="Body" 
-                            className="body-input" 
-                            value={body} 
-                            onChange={e => setBody(e.target.value)} 
+                        <textarea
+                            placeholder="Body"
+                            className="body-input"
+                            value={body}
+                            onChange={e => setBody(e.target.value)}
                         />
-                        <button className="save-button" onClick={SaveJournal}>Save Journal</button>
+                        <div className="button-container">
+                            <button className="save-button" onClick={SaveJournal}>Save Journal</button>
+                            <button className="save-button" onClick={handleEnableTranscription}>
+                                {enableTranscription ? "Disable" : "Enable"} Transcription
+                            </button>
+                            <button className="save-button" onClick={handleClearTranscript}>
+                                Clear Transcript
+                            </button>
+                        </div>
                     </div>
                     <div className="video-box">
                         <video ref={videoRef} id="live-video" autoPlay playsInline></video>
-                        <canvas ref={canvasRef} id="canvas" style={{display: "none"}} />
+                        <canvas ref={canvasRef} id="canvas" style={{ display: "none" }} />
                         <br></br>
                         <br></br>
                     </div>
                 </div>
                 <button onClick={() => setShowSongs(!showSongs)} className="song-button">Generate Songs</button>
-
+    
                 {showSongs && (
                     <div className="recommendation-box">
                         <h2>Title: Songs Recommended</h2>
                         <ol>
-                        <li>Song 1</li>
-                        <li>Song 2</li>
-                        <li>Song 3</li>
-                        <li>Song 4</li>
-                        <li>Song 5</li>
+                            <li>Song 1</li>
+                            <li>Song 2</li>
+                            <li>Song 3</li>
+                            <li>Song 4</li>
+                            <li>Song 5</li>
                         </ol>
                     </div>
                 )}
@@ -225,13 +333,27 @@ function Dashboard(){
                     <div></div>
                     <div>Predicted Emotion based on Text: {predictedEmotionText}</div>
                 </div>
+    
+                <div className="transcription-container">
+                    <h1 className="transcription-title">Live Transcription</h1>
+                    <div className="content-container">
+    
+                        <h2 className="transcription-title">
+                            {isRecording ? "Recording in progress...." : "Ready"}{" "}
+                        </h2>
+    
+                        <div className="button-container">
+                            
+                        </div>
+                    </div>
+                </div>
             </div>
-            
+    
         ) : (
-            <div>
-                <h1 style={{color: "red"}}>Not logged in</h1>
-            </div>
-        )
+                <div>
+                    <h1 style={{ color: "red" }}>Not logged in</h1>
+                </div>
+            )
     )
 }
 
