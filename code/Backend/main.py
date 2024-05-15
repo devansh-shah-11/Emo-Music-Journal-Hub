@@ -1,6 +1,9 @@
-from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
+from fastapi import FastAPI, HTTPException, Depends, File, UploadFile, Form, Response, Request, WebSocket
+import torch
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline, WhisperProcessor
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
+import base64
 from typing import Optional
 from pymongo import MongoClient
 from passlib.context import CryptContext
@@ -13,9 +16,24 @@ import uuid
 from keras.preprocessing import image
 import numpy as np
 from tensorflow.keras.applications.resnet import preprocess_input
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 import cv2
+import re
 from huggingface_hub import from_pretrained_keras
 from cachetools import cached, TTLCache
+import json
+import keras
+from bson.binary import Binary
+import pickle
+import nltk
+from nltk.corpus import wordnet,stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('stopwords')
+nltk.download('averaged_perceptron_tagger')
 
 IMAGEDIR = "test-faces/"
 
@@ -50,6 +68,15 @@ class Entry(BaseModel):
     
 class Logout(BaseModel):
     session_token: str
+    
+class TextPrediction(BaseModel):
+    text: str
+
+class Item(BaseModel):
+    audioData: str
+    language: str
+    
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -141,11 +168,55 @@ def preprocess_image(img_path):
 cache = TTLCache(maxsize=1, ttl=360000)
 
 @cached(cache)
-def load_model():
-    return from_pretrained_keras("DShah-11/emotion_detection_v2")
+def load_model(model_name):
+    return from_pretrained_keras(model_name)
+
+@cached(cache)
+def load_ml_model(model_id):
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+
+    model = AutoModelForSpeechSeq2Seq.from_pretrained(
+        model_id, torch_dtype=torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
+    )
+    model.to(device)
+    
+    processor = AutoProcessor.from_pretrained(model_id)
+
+    pipe = pipeline(
+        "automatic-speech-recognition",
+        model=model,
+        tokenizer=processor.tokenizer,
+        feature_extractor=processor.feature_extractor,
+        max_new_tokens=128,
+        chunk_length_s=10,
+        generate_kwargs={"language": "en", "task": "translate"},
+        return_timestamps=True,
+        torch_dtype=torch_dtype,
+        device=device,
+    )       
+
+    return pipe
+
+@app.post("/transcription")
+async def create_transcription(item: Item):
+    try:
+        model_id = "openai/whisper-tiny"
+        pipe = load_ml_model(model_id)
+        print("Model and pipeline loaded!!")
+        audio_data = base64.b64decode(item.audioData)
+        transcription = pipe(audio_data)
+        print(transcription)
+        transcription = transcription['text'].replace("Thank you.", "")
+        transcription = transcription.replace("watch again", "")
+        transcription = transcription.replace("Love you", "")
+        return {"transcription": transcription}
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/predict")
-async def predict(file: UploadFile = File(...)):
+async def predict(file: UploadFile = File(...), session_token: str = Form(...)):
     file.filename = f"{uuid.uuid4()}.jpg"
     contents = await file.read()
     os.makedirs(IMAGEDIR, exist_ok=True)
@@ -153,11 +224,215 @@ async def predict(file: UploadFile = File(...)):
     with open(f"{IMAGEDIR}{file.filename}", "wb") as f:
         f.write(contents)
     img_array = preprocess_image(f"{IMAGEDIR}{file.filename}")
-    model = load_model()
+    model = load_model(model_name="DShah-11/emotion_detection_v2")
     classes = ["anger", "contempt", "disgust", "fear", "happy", "sadness", "surprise"]
     prediction = model.predict(img_array)
     print(prediction)
     prediction = np.squeeze(np.round(prediction))
     print(prediction)
-    print(f'The image is a {classes[int(np.argmax(prediction))]}!')
-    return {"prediction": f'The image is a {classes[int(np.argmax(prediction))]}!'}
+    emotion = classes[int(np.argmax(prediction))]
+    print(f'The image is a {emotion}!')
+    
+    face_entry = {
+        "timestamp": datetime.now(),
+        "filename": file.filename,
+        "predicted_emotion": emotion
+    }
+    # collection.update_one({"session_token": session_token}, {"$push": {"face_entry": face_entry}})
+    
+    return {"prediction": emotion}
+
+def get_wordnet_pos(tag):
+    """Mapping the word to the correct POS tag for lemmatization."""
+    if tag.startswith('J'):
+        return wordnet.ADJ
+    elif tag.startswith('V'):
+        return wordnet.VERB
+    elif tag.startswith('N'):
+        return wordnet.NOUN
+    elif tag.startswith('R'):
+        return wordnet.ADV
+    else:
+        return wordnet.NOUN 
+
+def lemmatize_sentence(sentence):
+    """Lemmatizing the sentence and removing the stop words."""
+    lemmatizer = WordNetLemmatizer()
+    stop_words = set(stopwords.words('english'))
+
+    tokens = word_tokenize(sentence)
+    pos_tags = nltk.pos_tag(tokens)
+    
+    lemmatized_words = [lemmatizer.lemmatize(word, pos=get_wordnet_pos(tag)) for word, tag in pos_tags]
+    lemmatized_words_no_stopwords = [word for word in lemmatized_words if word.lower() not in stop_words]
+    
+    return ' '.join(lemmatized_words_no_stopwords)
+
+def predict_emotion(tokenizer, model, sent):
+    sent = re.sub('[^a-zA-Z]', ' ', sent)
+    sent = sent.lower()
+    result = lemmatize_sentence(sent)
+    print(result)
+    sequence = tokenizer.texts_to_sequences([result])
+    print(sequence)
+    embedding = pad_sequences(sequence, maxlen=40, padding='pre')
+    prediction = model.predict(embedding)
+    predicted_class = prediction.argmax()
+    return predicted_class
+
+@cached(cache)
+def load_tokenizer():
+    with open('../ML/tokenizer.json','r',encoding='utf-8') as f:
+        json_str = json.loads(f.read())
+    return keras.preprocessing.text.tokenizer_from_json(json_str)
+
+@app.post("/predicttext")
+async def predict_text(text: str = Form(...), session_token: str = Form(...)):
+    input_text = json.loads(text)
+    text = input_text['text']
+    print("Text written: ",text)
+    tokenizer = load_tokenizer()
+    print("\n\nTokenizer loaded\n\n")
+    model = load_model(model_name="DShah-11/sentiment_analysis_v1")
+    print("\n\nModel loaded\n\n")
+    classes = ['Sadness', 'Anger', 'Love', 'Surprise', 'Fear', 'Happy']
+    index = predict_emotion(tokenizer, model, text)
+    emotion = classes[index]
+    print(f"Predicted class is {emotion}")
+    text_entry = {
+        "timestamp": datetime.now(),
+        "text": text,
+        "predicted_emotion": emotion
+    }
+    collection.update_one({"session_token": session_token}, {"$push": {"text_entry": text_entry}})
+
+    
+    return {"prediction": f"{emotion}"}
+
+
+@app.get("/get_text_entries")
+async def get_text_entries(session_token: str):
+    db_user = collection.find_one({"session_token": session_token})
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found or not logged in")
+
+    text_entry = db_user.get("text_entry", [])
+    return {"entries": text_entry}
+
+
+@app.get("/get_image/{filename}")
+async def get_image(filename: str):
+    image_directory = "test-faces"
+    image_path = os.path.join(image_directory, filename)
+
+    if not os.path.isfile(image_path):
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    with open(image_path, "rb") as image_file:
+        image_data = image_file.read()
+
+    return Response(content=image_data, media_type="image/jpeg")
+
+# @app.get("/get_user_images")
+# async def get_user_images(request: Request, session_token: str):
+#     db_user = collection.find_one({"session_token": session_token})
+#     if not db_user:
+#         raise HTTPException(status_code=404, detail="User not found or not logged in")
+
+#     face_entry = db_user.get("face_entry", [])
+#     image_urls = [f"{request.url_for('get_image', filename=entry['filename'])}" for entry in face_entry]
+#     return {"image_urls": image_urls}
+
+
+@app.get("/get_user_images")
+async def get_user_images(session_token: str):
+    db_user = collection.find_one({"session_token": session_token})
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found or not logged in")
+
+    face_entry = db_user.get("face_entry", [])
+    image_directory = "test-faces"
+    images_base64 = []
+
+    for entry in face_entry:
+        image_path = os.path.join(image_directory, entry['filename'])
+        if os.path.isfile(image_path):
+            with open(image_path, "rb") as image_file:
+                image_data = image_file.read()
+                base64_encoded_data = base64.b64encode(image_data)
+                base64_message = base64_encoded_data.decode('utf-8')
+                images_base64.append({
+                    "filename": entry['filename'],
+                    "data": base64_message,
+                    "emotion": entry['predicted_emotion']
+                })
+
+    return {"images": images_base64}
+
+@app.websocket("/ws/{feedback_type}")
+async def websocket_endpoint(websocket: WebSocket, feedback_type: str):
+    await websocket.accept()
+    try:
+        session_token = await websocket.receive_text()
+
+        db_user = collection.find_one({"session_token": session_token})
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found or not logged in")
+
+        if feedback_type == "image":
+            face_entry = db_user.get("face_entry", [])
+            image_directory = "test-faces"
+            filenames = [entry["filename"] for entry in db_user.get("image_feedback", [])] # Already feedback given
+            face_entry = [entry for entry in face_entry if entry["filename"] not in filenames]
+            for entry in face_entry:
+                image_path = os.path.join(image_directory, entry['filename'])
+                if os.path.isfile(image_path):
+                    with open(image_path, "rb") as image_file:
+                        image_data = image_file.read()
+                        base64_encoded_data = base64.b64encode(image_data)
+                        base64_message = base64_encoded_data.decode('utf-8')
+                        await websocket.send_json({
+                            "filename": entry['filename'],
+                            "data": base64_message,
+                            "emotion": entry['predicted_emotion']
+                        })
+        elif feedback_type == "text":
+            text_entry = db_user.get("text_entry", [])
+            filenames = [entry["filename"] for entry in db_user.get("text_feedback", [])] # Already feedback given
+            text_entry = [entry for entry in text_entry if entry["filename"] not in filenames]
+            for entry in text_entry:
+                await websocket.send_json({
+                    "text": entry['text'],
+                    "emotion": entry['predicted_emotion']
+                })
+
+    except HTTPException as e:
+        # Send error message to client before closing
+        await websocket.send_text(str(e.detail))
+        await websocket.close()
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        await websocket.close()
+        
+@app.post("/image_feedback")
+async def image_feedback(file: str = Form(...), emotion: str = Form(...), session_token: str = Form(...)):
+    
+    feedback_entry = {
+        "filename": file,
+        "corrected_emotion": emotion
+    }
+    collection.update_one({"session_token": session_token}, {"$push": {"image_feedback": feedback_entry}})
+    
+    return {"message": "Feedback added"}
+
+@app.post("/text_feedback")
+async def text_feedback(text:str = Form(), emotion: str = Form(...), session_token: str = Form(...)):
+    
+    feedback_entry = {
+        "text": text,
+        "corrected_emotion": emotion
+    }
+    collection.update_one({"session_token": session_token}, {"$push": {"text_feedback": feedback_entry}})
+    
+    return {"message": "Feedback added"}
