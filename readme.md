@@ -36,14 +36,16 @@ To run the application locally, follow these steps:
 2. Install the required dependencies:
 
     a. **Frontend**
+
         - Navigate to the `code` directory
-        
+
         - Run:
           ```
           npm install
           ```
 
     b. **Backend**
+
         - Navigate to the `code/Backend` directory
 
         - Run:
@@ -54,6 +56,7 @@ To run the application locally, follow these steps:
 3. Run the application:
 
     a. **Frontend**
+
         - Navigate to the `code` directory
 
         - Run:
@@ -62,6 +65,7 @@ To run the application locally, follow these steps:
           ```
 
     b. **Backend**
+    
         - Navigate to the `code/Backend` directory
 
         - Run:
