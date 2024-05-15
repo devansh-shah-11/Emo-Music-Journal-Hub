@@ -7,6 +7,7 @@ import base64
 from typing import Optional
 from pymongo import MongoClient
 from passlib.context import CryptContext
+import random
 import jwt
 import os
 from dotenv import load_dotenv
@@ -436,3 +437,27 @@ async def text_feedback(text:str = Form(), emotion: str = Form(...), session_tok
     collection.update_one({"session_token": session_token}, {"$push": {"text_feedback": feedback_entry}})
     
     return {"message": "Feedback added"}
+
+@app.post("/music_generation")
+async def music_generation(image_emotion: str=Form(...), text_emotion: str=Form(...), session_token: str=Form(...)):
+    
+    feedback_entry = {
+        "image_emotion": image_emotion,
+        "text_emotion": text_emotion
+    }
+    
+    if image_emotion == text_emotion:
+        with open("prompts.txt", "r") as f:
+            prompts = f.readlines()
+        accepted = []
+        for prompt in prompts:
+            if image_emotion in prompt:
+                accepted.append(prompt)
+        if len(accepted) == 0:
+            return {"message": "No prompts available for the given emotion"}
+        else:
+            final_prompt = random.sample(accepted, 5)
+            return {"prompts": final_prompt}
+    else:
+        return {"message": "Facial and Textual emotions do not match, please provide feedback for the same."}
+    
