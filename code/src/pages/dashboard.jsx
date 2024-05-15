@@ -296,7 +296,7 @@ function Dashboard(){
                                 });
                             }, 'image/png');
                         }
-                    }, 60000);
+                    }, 75000);
                 })
                 .catch(err => console.log(err));
         }
