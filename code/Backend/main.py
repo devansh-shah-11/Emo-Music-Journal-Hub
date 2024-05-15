@@ -239,7 +239,7 @@ async def predict(file: UploadFile = File(...), session_token: str = Form(...)):
         "filename": file.filename,
         "predicted_emotion": emotion
     }
-    # collection.update_one({"session_token": session_token}, {"$push": {"face_entry": face_entry}})
+    collection.update_one({"session_token": session_token}, {"$push": {"face_entry": face_entry}})
     
     return {"prediction": emotion}
 
