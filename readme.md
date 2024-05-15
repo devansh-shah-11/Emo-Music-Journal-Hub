@@ -37,15 +37,17 @@ To run the application locally, follow these steps:
 
     a. **Frontend**
         - Navigate to the `code` directory
+        
         - Run:
-          ```bash
+          ```
           npm install
           ```
 
     b. **Backend**
         - Navigate to the `code/Backend` directory
+
         - Run:
-          ```bash
+          ```
           pip install -r requirements.txt
           ```
 
@@ -53,15 +55,17 @@ To run the application locally, follow these steps:
 
     a. **Frontend**
         - Navigate to the `code` directory
+
         - Run:
-          ```bash
+          ```
           npm run dev
           ```
 
     b. **Backend**
         - Navigate to the `code/Backend` directory
+
         - Run:
-          ```bash
+          ```
           uvicorn main:app --reload
           ```
 
