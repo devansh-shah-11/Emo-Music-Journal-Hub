@@ -400,7 +400,8 @@ async def websocket_endpoint(websocket: WebSocket, feedback_type: str):
         elif feedback_type == "text":
             text_entry = db_user.get("text_entry", [])
             filenames = [entry["filename"] for entry in db_user.get("text_feedback", [])] # Already feedback given
-            text_entry = [entry for entry in text_entry if entry["filename"] not in filenames]
+            if len(filenames) > 0:
+                text_entry = [entry for entry in text_entry if entry["filename"] not in filenames]
             for entry in text_entry:
                 await websocket.send_json({
                     "text": entry['text'],
