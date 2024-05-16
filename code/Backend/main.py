@@ -283,7 +283,7 @@ def predict_emotion(tokenizer, model, sent):
 
 @cached(cache)
 def load_tokenizer():
-    with open('../ML/tokenizer.json','r',encoding='utf-8') as f:
+    with open('../ML/Sentiment_Analysis/tokenizer.json','r',encoding='utf-8') as f:
         json_str = json.loads(f.read())
     return keras.preprocessing.text.tokenizer_from_json(json_str)
 

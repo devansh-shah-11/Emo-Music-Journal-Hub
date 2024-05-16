@@ -15,8 +15,8 @@ function Dashboard(){
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
 
-    const [predictedEmotionText, setPredictedEmotionText] = useState('');
-    const [predictedEmotionFace, setPredictedEmotionFace] = useState('');
+    const [predictedEmotionText, setPredictedEmotionText] = useState('happy');
+    const [predictedEmotionFace, setPredictedEmotionFace] = useState('happy');
 
     const [isRecording, setIsRecording] = useState(false);
     const [transcription, setTranscription] = useState("");
