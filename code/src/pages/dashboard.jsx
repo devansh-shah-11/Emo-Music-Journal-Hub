@@ -15,8 +15,8 @@ function Dashboard(){
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
 
-    const [predictedEmotionText, setPredictedEmotionText] = useState('');
-    const [predictedEmotionFace, setPredictedEmotionFace] = useState('');
+    const [predictedEmotionText, setPredictedEmotionText] = useState('happy');
+    const [predictedEmotionFace, setPredictedEmotionFace] = useState('happy');
 
     const [isRecording, setIsRecording] = useState(false);
     const [transcription, setTranscription] = useState("");
@@ -24,6 +24,12 @@ function Dashboard(){
     const streamRef = useRef(null);
     const [enableTranscription, setEnableTranscription] = useState(false);
     const transcriptionTextAreaRef = useRef();
+
+    const [showSongs, setShowSongs] = useState(false);
+    const [songs, setSongs] = useState([]);
+    const [imageEmotion, setImageEmotion] = useState('');
+    const [textEmotion, setTextEmotion] = useState('');
+    const [sessionToken, setSessionToken] = useState('');
 
     let user = useSelector(selectUser);
     console.log("User from redux: ", user);
@@ -169,6 +175,37 @@ function Dashboard(){
         setBody("");
     };
 
+    const generateSongs = async () => {
+        console.log("Generating songs...");
+        console.log("Predicted Emotion based on Face: ", predictedEmotionFace);
+        console.log("Predicted Emotion based on Text: ", predictedEmotionText);
+        console.log("User: ", user);
+        const formData = new FormData();
+        formData.append('image_emotion', predictedEmotionFace);
+        if (predictedEmotionText === '') {
+            formData.append('text_emotion', predictedEmotionFace)
+        }else{
+            formData.append('text_emotion', predictedEmotionText);
+        }
+        formData.append('session_token', user);
+        console.log(formData)
+        try {
+            const response = await fetch('http://localhost:8000/music_generation', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+            if (data.prompts) {
+                setSongs(data.prompts);
+            } else {
+                console.log(data.message);
+            }
+        } catch (error) {
+            console.error('Error generating songs:', error);
+        }
+    };
+
     const SaveJournal = async () => {
 
         if (!title.trim()) {
@@ -220,8 +257,6 @@ function Dashboard(){
             console.log("Error saving journal: ", error);
         }
     }
-    
-    const [showSongs, setShowSongs] = useState(false);
 
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
@@ -261,7 +296,7 @@ function Dashboard(){
                                 });
                             }, 'image/png');
                         }
-                    }, 60000);
+                    }, 75000);
                 })
                 .catch(err => console.log(err));
         }
@@ -324,17 +359,17 @@ function Dashboard(){
                         <br></br>
                     </div>
                 </div>
-                <button onClick={() => setShowSongs(!showSongs)} className="song-button">Generate Songs</button>
-    
+                <button onClick={() => { generateSongs(); setShowSongs(true); }} className="song-button">
+                    Generate Songs
+                </button>
+
                 {showSongs && (
                     <div className="recommendation-box">
                         <h2>Title: Songs Recommended</h2>
                         <ol>
-                            <li>Song 1</li>
-                            <li>Song 2</li>
-                            <li>Song 3</li>
-                            <li>Song 4</li>
-                            <li>Song 5</li>
+                            {songs.map((song, index) => (
+                                <li key={index}>{song}</li>
+                            ))}
                         </ol>
                     </div>
                 )}

@@ -7,6 +7,7 @@ import base64
 from typing import Optional
 from pymongo import MongoClient
 from passlib.context import CryptContext
+import random
 import jwt
 import os
 from dotenv import load_dotenv
@@ -238,7 +239,7 @@ async def predict(file: UploadFile = File(...), session_token: str = Form(...)):
         "filename": file.filename,
         "predicted_emotion": emotion
     }
-    # collection.update_one({"session_token": session_token}, {"$push": {"face_entry": face_entry}})
+    collection.update_one({"session_token": session_token}, {"$push": {"face_entry": face_entry}})
     
     return {"prediction": emotion}
 
@@ -282,7 +283,7 @@ def predict_emotion(tokenizer, model, sent):
 
 @cached(cache)
 def load_tokenizer():
-    with open('../ML/tokenizer.json','r',encoding='utf-8') as f:
+    with open('../ML/Sentiment_Analysis/tokenizer.json','r',encoding='utf-8') as f:
         json_str = json.loads(f.read())
     return keras.preprocessing.text.tokenizer_from_json(json_str)
 
@@ -399,7 +400,8 @@ async def websocket_endpoint(websocket: WebSocket, feedback_type: str):
         elif feedback_type == "text":
             text_entry = db_user.get("text_entry", [])
             filenames = [entry["filename"] for entry in db_user.get("text_feedback", [])] # Already feedback given
-            text_entry = [entry for entry in text_entry if entry["filename"] not in filenames]
+            if len(filenames) > 0:
+                text_entry = [entry for entry in text_entry if entry["filename"] not in filenames]
             for entry in text_entry:
                 await websocket.send_json({
                     "text": entry['text'],
@@ -436,3 +438,27 @@ async def text_feedback(text:str = Form(), emotion: str = Form(...), session_tok
     collection.update_one({"session_token": session_token}, {"$push": {"text_feedback": feedback_entry}})
     
     return {"message": "Feedback added"}
+
+@app.post("/music_generation")
+async def music_generation(image_emotion: str=Form(...), text_emotion: str=Form(...), session_token: str=Form(...)):
+    
+    feedback_entry = {
+        "image_emotion": image_emotion,
+        "text_emotion": text_emotion
+    }
+    
+    if image_emotion == text_emotion:
+        with open("prompts.txt", "r") as f:
+            prompts = f.readlines()
+        accepted = []
+        for prompt in prompts:
+            if image_emotion in prompt:
+                accepted.append(prompt)
+        if len(accepted) == 0:
+            return {"message": "No prompts available for the given emotion"}
+        else:
+            final_prompt = random.sample(accepted, 5)
+            return {"prompts": final_prompt}
+    else:
+        return {"message": "Facial and Textual emotions do not match, please provide feedback for the same."}
+    

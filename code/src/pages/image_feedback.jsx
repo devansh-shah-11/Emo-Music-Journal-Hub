@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import './feedback.css';
+import { UserContext } from "../context/usercontext.jsx";
+import { useSelector, useDispatch } from "react-redux";
+import { logout, selectUser } from "../features/userSlice";
 
 function ImageFeedback() {
     const [images, setImages] = useState([]);
     const [selectedEmotions, setSelectedEmotions] = useState(new Array(images.length).fill(''));
     const imageEmotions = ["anger", "contempt", "disgust", "fear", "happy", "sadness", "surprise"];
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRAZDEuY29tIn0.H8wlcotJ3Sa3MTnbW9utGnmBUhhqZL3IG07I8oN0eDU';
+    // const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRAZDEuY29tIn0.H8wlcotJ3Sa3MTnbW9utGnmBUhhqZL3IG07I8oN0eDU';
+
+    let token = useSelector(selectUser);
+    if(!token) {
+        token = localStorage.getItem("user");
+        console.log("User from local storage: ", token);
+    }
+    console.log("Yoman User: ", token)
 
     useEffect(() => {
         
